@@ -4,6 +4,7 @@ using namespace pros::c;
 const int32_t MOTOR_MAX_VOLTAGE = 127;
 const int32_t MOTOR_MIN_VOLTAGE = -127;
 
+
 const uint8_t FRONTRIGHT = 1;
 const uint8_t BACKRIGHT = 2;
 const uint8_t BACKLEFT = 3;
@@ -20,6 +21,27 @@ const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CON
 
 FILE *file = fopen("file.csv", "a");
 
+typedef struct chassis {
+	uint8_t frontLeftMotor;	
+	uint8_t frontRightMotor;
+	uint8_t backLeftMotor;
+	uint8_t backRightMotor;
+} chassis;
+
+int32_t base_move(chassis Chassis, const int8_t x, const int8_t y) {
+	motor_move(Chassis.frontLeftMotor, y + x);
+	motor_move(Chassis.frontRightMotor, y - x);
+	motor_move(Chassis.backLeftMotor, y - x);
+	motor_move(Chassis.backRightMotor, y + x);	
+	return 1;
+}
+
+chassis base;
+base.frontLeftMotor = FRONTLEFT;
+base.frontRightMotor = FRONTRIGHT;
+base.backLeftMotor = BACKLEFT;
+base.backRightMotor = BACKRIGHT;
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -30,10 +52,7 @@ void initialize() {
 	printf("Initializing");
 	motor_set_gearing(FRONTRIGHT, pros::motor_gearset_e::E_MOTOR_GEARSET_18);
 	motor_set_gearing(BACKRIGHT, pros::motor_gearset_e::E_MOTOR_GEARSET_18);
-	motor_set_gearing(BACKLEFT, pros::motor_gearset_e::E_MOTOR_GEARSET_18);
-	motor_set_gearing(FRONTLEFT, pros::motor_gearset_e::E_MOTOR_GEARSET_18);
-	motor_set_gearing(FLYWHEELA, pros::motor_gearset_e::E_MOTOR_GEARSET_06);
-	motor_set_gearing(FLYWHEELB, pros::motor_gearset_e::E_MOTOR_GEARSET_06);
+	motor_set_gearing(BACKLEFT, pros::motor_gearset_e::E_MOTOR_GEARSET_18); motor_set_gearing(FRONTLEFT, pros::motor_gearset_e::E_MOTOR_GEARSET_18); motor_set_gearing(FLYWHEELA, pros::motor_gearset_e::E_MOTOR_GEARSET_06); motor_set_gearing(FLYWHEELB, pros::motor_gearset_e::E_MOTOR_GEARSET_06);
 
 	motor_set_reversed(FLYWHEELA, true);
 	motor_set_reversed(FRONTLEFT, true);
