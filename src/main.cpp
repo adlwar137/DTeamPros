@@ -2,6 +2,7 @@
 #include "pros/misc.h"
 #include "pros/motors.h"
 #include "base.h"
+#include "flywheel.h"
 
 using namespace pros::c;
 
@@ -23,9 +24,12 @@ const uint8_t PISTON = 8;
 
 const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CONTROLLER_MASTER;
 
+//needs to not be global
 FILE *file = fopen("file.csv", "a");
 
+//declare subsystems here
 chassis base;
+flywheel discShooter;
 
 
 /**
@@ -37,18 +41,23 @@ chassis base;
 void initialize() {
 	printf("Initializing");
 
+	//Initialize motors
 	base.frontLeftMotor = FRONTLEFT;
 	base.frontRightMotor = FRONTRIGHT;
 	base.backLeftMotor = BACKLEFT;
 	base.backRightMotor = BACKRIGHT;
 
-	base_set_gearing(base, pros::E_MOTOR_GEARSET_18);
-	motor_set_gearing(FLYWHEELA, pros::motor_gearset_e::E_MOTOR_GEARSET_06); 
-	motor_set_gearing(FLYWHEELB, pros::motor_gearset_e::E_MOTOR_GEARSET_06);
+	discShooter.motorA = FLYWHEELA;
+	discShooter.motorB = FLYWHEELB;
 
+	//Set motor gearing
+	base_set_gearing(base, pros::E_MOTOR_GEARSET_18);
+	flywheel_set_gearing(discShooter, pros::E_MOTOR_GEARSET_06);
+
+	//Set specific motor directions
 	motor_set_reversed(base.frontLeftMotor, true);
 	motor_set_reversed(base.backLeftMotor, true);
-	motor_set_reversed(FLYWHEELA, true);
+	motor_set_reversed(discShooter.motorA, true);
 	motor_set_reversed(INTAKE, true);
 
 	if(file==NULL){
@@ -124,8 +133,7 @@ void opcontrol() {
 		base_move(base, controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X), controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y));
 		base_turn(base, controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X));
 
-		motor_move(FLYWHEELA, controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_Y));
-		motor_move(FLYWHEELB, controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_Y));
+		flywheel_spin(discShooter, controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_Y));
 
 		if(file != NULL) {
 			const int firstSpeed = motor_get_actual_velocity(FLYWHEELA);
