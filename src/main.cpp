@@ -24,9 +24,6 @@ const uint8_t PISTON = 8;
 
 const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CONTROLLER_MASTER;
 
-//needs to not be global
-FILE *file = fopen("file.csv", "a");
-
 //declare subsystems here
 chassis base;
 flywheel discShooter;
@@ -60,10 +57,10 @@ void initialize() {
 	motor_set_reversed(discShooter.motorA, true);
 	motor_set_reversed(INTAKE, true);
 
-	if(file==NULL){
-		printf("file error");
+	if(usd_is_installed()){
+		printf("SD card installed :(\n");
 	} else {
-		printf("file working :)");
+		printf("SD card installed :)\n");
 	}
 
 	lv_obj_t *label1 = lv_label_create(lv_scr_act(), NULL);
@@ -141,7 +138,10 @@ void opcontrol() {
 
 		flywheel_spin(discShooter, controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_Y));
 
-		if(file != NULL) {
+		//Logging logic
+		if(usd_is_installed()) {
+			FILE * file = fopen("/usd/file.csv", "a");
+			if(file != NULL) {
 			const int firstSpeed = motor_get_actual_velocity(FLYWHEELA);
 			const int secondSpeed = motor_get_actual_velocity(FLYWHEELB);
 			const double firstTorque = motor_get_torque(FLYWHEELA);
@@ -152,7 +152,11 @@ void opcontrol() {
 			fclose(file);
 
 			printf("%d, %f, %f, %d, %f, %f\n", firstSpeed, firstTorque, firstTemperature, secondSpeed, secondTorque, secondTemperature);	
+			} else {
+				printf("File not found\n");
+			}
 		}
+		
 
 		delay(20);
 	}
