@@ -25,7 +25,7 @@ const uint8_t PISTON = 8;
 const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CONTROLLER_MASTER;
 
 //declare subsystems here
-chassis base;
+chassis_t base;
 flywheel discShooter;
 
 
