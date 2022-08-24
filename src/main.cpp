@@ -21,16 +21,14 @@ const uint8_t INTAKE = 11;
 
 const uint8_t PISTON = 8;
 
-const pros::controller_id_e_t MASTER_CONTROLLER =
-    pros::controller_id_e_t::E_CONTROLLER_MASTER;
+const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CONTROLLER_MASTER;
 
 // declare subsystems here
 chassis_t base;
 flywheel discShooter;
 
-static int32_t remap(int32_t value, int32_t from1, int32_t to1, int32_t from2,
-                     int32_t to2) {
-  return (int)(value - from1) / (to1 - from1) * (to2 - from2) + from2;
+static int32_t remap(int32_t value, int32_t from1, int32_t to1, int32_t from2, int32_t to2) {
+  return (int)((double)(value - from1) / (to1 - from1) * (to2 - from2) + from2);
 }
 
 /**
@@ -54,24 +52,20 @@ void initialize() {
   // Set motor gearing
   base_set_gearing(base, pros::E_MOTOR_GEARSET_18);
   flywheel_set_gearing(discShooter, pros::E_MOTOR_GEARSET_06);
-
+  
   // Set specific motor directions
   motor_set_reversed(base.frontLeftMotor, true);
   motor_set_reversed(base.backLeftMotor, true);
   motor_set_reversed(discShooter.motorA, true);
   motor_set_reversed(INTAKE, true);
-
+  
   if (usd_is_installed()) {
     printf("SD card installed :(\n");
   } else {
     printf("SD card installed :)\n");
   }
 
-  lv_obj_t *label1 = lv_label_create(lv_scr_act(), NULL);
-
-  lv_label_set_text(label1, "Hello World!");
-
-  lv_obj_align(label1, NULL, LV_ALIGN_CENTER, 0, 0);
+  
 }
 
 /**
@@ -125,22 +119,20 @@ void opcontrol() {
 
   while (1) {
 
-    if (controller_get_digital_new_press(pros::E_CONTROLLER_MASTER,
-                                         DIGITAL_B)) {
-      printf("please");
-    }
+    //printf("%d\n", remap(0, -127, 127, -200, 200));
 
-    if (controller_get_digital(MASTER_CONTROLLER, DIGITAL_R1)) {
-      motor_move(INTAKE, MOTOR_MAX_VOLTAGE);
-    } else if (controller_get_digital(MASTER_CONTROLLER, DIGITAL_R2)) {
-      motor_move(INTAKE, MOTOR_MIN_VOLTAGE);
-    } else {
-      motor_brake(INTAKE);
-    }
+    base_move_velocity(base,
+    remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X), -127, 127, -200, 200),
+    remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y), -127, 127, -200, 200),
+    remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X), -127, 127, -200, 200));
 
-    flywheel_spin(discShooter,
-                  controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_Y));
-
+/*
+    base_move(base, 
+    controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X), 
+    controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y), 
+    controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X));
+*/
+    /*
     // Logging logic
     if (usd_is_installed()) {
       FILE *file = fopen("/usd/file.csv", "a");
@@ -161,6 +153,7 @@ void opcontrol() {
         printf("File not found\n");
       }
     }
+    */
 
     delay(20);
   }
