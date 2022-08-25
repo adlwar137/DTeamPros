@@ -21,7 +21,20 @@ const uint8_t INTAKE = 11;
 
 const uint8_t PISTON = 8;
 
+const uint8_t ADI_ENCODER_RIGHT_TOP = 1;
+const uint8_t ADI_ENCODER_RIGHT_BOTTOM = 2;
+
+const uint8_t ADI_ENCODER_LEFT_TOP = 3;
+const uint8_t ADI_ENCODER_LEFT_BOTTOM = 4;
+
+const uint8_t ADI_ENCODER_STRAFE_TOP = 5;
+const uint8_t ADI_ENCODER_STRAFE_BOTTOM = 6;
+
 const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CONTROLLER_MASTER;
+
+adi_encoder_t right_encoder;
+adi_encoder_t left_encoder;
+adi_encoder_t strafe_encoder;
 
 // declare subsystems here
 chassis_t base;
@@ -58,6 +71,10 @@ void initialize() {
   motor_set_reversed(base.backLeftMotor, true);
   motor_set_reversed(discShooter.motorA, true);
   motor_set_reversed(INTAKE, true);
+
+  right_encoder = adi_encoder_init(ADI_ENCODER_LEFT_TOP, ADI_ENCODER_LEFT_BOTTOM, false);
+  left_encoder = adi_encoder_init(ADI_ENCODER_RIGHT_TOP, ADI_ENCODER_RIGHT_BOTTOM, false);
+  strafe_encoder = adi_encoder_init(ADI_ENCODER_STRAFE_TOP, ADI_ENCODER_STRAFE_BOTTOM, false);
   
   if (usd_is_installed()) {
     printf("SD card installed :(\n");
@@ -120,6 +137,10 @@ void opcontrol() {
   while (1) {
 
     //printf("%d\n", remap(0, -127, 127, -200, 200));
+    printf("Right Encoder: %d, Left Encoder: %d, Strafe Encoder: %d\n", 
+    ext_adi_encoder_get(right_encoder), 
+    ext_adi_encoder_get(left_encoder), 
+    ext_adi_encoder_get(strafe_encoder));
 
     base_move_velocity(base,
     remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X), -127, 127, -200, 200),
