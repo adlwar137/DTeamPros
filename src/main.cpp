@@ -6,6 +6,10 @@
 
 using namespace pros::c;
 
+#define TRACKING_WHEEL_DIAMETER 2.75
+#define LEFT_TRACKING_WHEEL_DISTANCE_FROM_CENTER 3.5
+#define RIGHT_TRACKING_WHEEL_DISTANCE_FROM_CENTER 3.5
+
 const int32_t MOTOR_MAX_VOLTAGE = 127;
 const int32_t MOTOR_MIN_VOLTAGE = -127;
 
@@ -72,10 +76,20 @@ void initialize() {
   motor_set_reversed(discShooter.motorA, true);
   motor_set_reversed(INTAKE, true);
 
-  right_encoder = adi_encoder_init(ADI_ENCODER_LEFT_TOP, ADI_ENCODER_LEFT_BOTTOM, false);
-  left_encoder = adi_encoder_init(ADI_ENCODER_RIGHT_TOP, ADI_ENCODER_RIGHT_BOTTOM, false);
+  motor_set_brake_mode(base.frontLeftMotor, MOTOR_BRAKE_COAST);
+  motor_set_brake_mode(base.frontRightMotor, MOTOR_BRAKE_COAST);
+  motor_set_brake_mode(base.backLeftMotor, MOTOR_BRAKE_COAST);
+  motor_set_brake_mode(base.backRightMotor, MOTOR_BRAKE_COAST);
+
+  motor_set_brake_mode(discShooter.motorA, MOTOR_BRAKE_COAST);
+  motor_set_brake_mode(discShooter.motorB, MOTOR_BRAKE_COAST);
+
+  left_encoder = adi_encoder_init(ADI_ENCODER_LEFT_TOP, ADI_ENCODER_LEFT_BOTTOM, false);
+  right_encoder = adi_encoder_init(ADI_ENCODER_RIGHT_TOP, ADI_ENCODER_RIGHT_BOTTOM, false);
   strafe_encoder = adi_encoder_init(ADI_ENCODER_STRAFE_TOP, ADI_ENCODER_STRAFE_BOTTOM, false);
   
+  adi_pin_mode(PISTON,OUTPUT);
+
   if (usd_is_installed()) {
     printf("SD card installed :(\n");
   } else {
@@ -135,24 +149,54 @@ void opcontrol() {
   printf("opcontrol");
 
   while (1) {
-
-    //printf("%d\n", remap(0, -127, 127, -200, 200));
+/*
     printf("Right Encoder: %d, Left Encoder: %d, Strafe Encoder: %d\n", 
     ext_adi_encoder_get(right_encoder), 
     ext_adi_encoder_get(left_encoder), 
     ext_adi_encoder_get(strafe_encoder));
+*/
+
+    //printf("%d\n", controller_get_digital(MASTER_CONTROLLER, DIGITAL_B));
+
+    
+  
+    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_B) == 1) {
+      adi_digital_write(PISTON, pistonState);
+      pistonState = !pistonState;
+    }
+
+    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_UP)) {
+      flywheel_spin(discShooter, 127);
+    }
+    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_DOWN)) {
+      flywheel_spin(discShooter, 0);
+    }
+
+
+    double leftDistance = ((double)(ext_adi_encoder_get(left_encoder)) / 360) * M_PI * TRACKING_WHEEL_DIAMETER;
+    double rightDistance = ((double)(ext_adi_encoder_get(right_encoder)) / 360) * M_PI * TRACKING_WHEEL_DIAMETER;
+
+    double prevLeftDistance;
+    double prevRightDistance;
+
+    double deltaLeftDistance = leftDistance - prevLeftDistance;
+    double deltaRightDistance = rightDistance - prevRightDistance;
+
+    //radians
+    double deltaheading = (deltaLeftDistance - deltaRightDistance) / (LEFT_TRACKING_WHEEL_DISTANCE_FROM_CENTER + RIGHT_TRACKING_WHEEL_DISTANCE_FROM_CENTER);
+    
+    double heading = heading + deltaheading;
+    
+    //printf("leftDistance: %f, rightDistance: %f\n", leftDistance, rightDistance);
+
+    prevLeftDistance = leftDistance;
+    prevRightDistance = rightDistance;
 
     base_move_velocity(base,
     remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X), -127, 127, -200, 200),
     remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y), -127, 127, -200, 200),
     remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X), -127, 127, -200, 200));
 
-/*
-    base_move(base, 
-    controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X), 
-    controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y), 
-    controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X));
-*/
     /*
     // Logging logic
     if (usd_is_installed()) {
@@ -175,7 +219,6 @@ void opcontrol() {
       }
     }
     */
-
     delay(20);
   }
 }
