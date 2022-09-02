@@ -197,6 +197,7 @@ void opcontrol() {
     remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y), -127, 127, -200, 200),
     remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X), -127, 127, -200, 200));
 
+    flywheel_spin(discShooter, controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_Y));
     /*
     // Logging logic
     if (usd_is_installed()) {
