@@ -165,6 +165,14 @@ void opcontrol() {
       pistonState = !pistonState;
     }
 
+    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_R1) == 1) {
+      motor_move(INTAKE, 127);      
+    } else if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_R2) == 1) {
+      motor_move(INTAKE, -127);
+    } else if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_A) == 1) {
+      motor_move(INTAKE, 0);
+    }
+
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_UP)) {
       flywheel_spin(discShooter, 127);
     }
