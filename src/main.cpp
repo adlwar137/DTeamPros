@@ -74,7 +74,8 @@ void initialize() {
   motor_set_reversed(base.frontLeftMotor, true);
   motor_set_reversed(base.backLeftMotor, true);
   motor_set_reversed(discShooter.motorA, true);
-  motor_set_reversed(INTAKE, true);
+  motor_set_reversed(discShooter.motorB, true);
+  motor_set_reversed(INTAKE, false);
 
   motor_set_brake_mode(base.frontLeftMotor, MOTOR_BRAKE_COAST);
   motor_set_brake_mode(base.frontRightMotor, MOTOR_BRAKE_COAST);
@@ -128,7 +129,15 @@ void competition_initialize() { printf("comp init"); }
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+  flywheel_spin(discShooter, 127);
+
+  adi_digital_write(PISTON, true);
+
+  delay(2000);
+
+  adi_digital_write(PISTON, false);
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -158,10 +167,9 @@ void opcontrol() {
 
     //printf("%d\n", controller_get_digital(MASTER_CONTROLLER, DIGITAL_B));
 
-    
+    adi_digital_write(PISTON, pistonState);
   
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_B) == 1) {
-      adi_digital_write(PISTON, pistonState);
       pistonState = !pistonState;
     }
 
