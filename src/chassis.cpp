@@ -2,8 +2,7 @@
 
 using namespace pros::c;
 
-int32_t base_move(chassis_t chassis, const int32_t x_voltage,
-                  const int32_t y_voltage, const int32_t w_voltage) {
+int32_t base_move(chassis_t chassis, const int32_t x_voltage, const int32_t y_voltage, const int32_t w_voltage) {
   motor_move(chassis.frontLeftMotor, y_voltage + x_voltage + w_voltage);
   motor_move(chassis.frontRightMotor, y_voltage - x_voltage - w_voltage);
   motor_move(chassis.backLeftMotor, y_voltage - x_voltage + w_voltage);
@@ -11,21 +10,31 @@ int32_t base_move(chassis_t chassis, const int32_t x_voltage,
   return 1;
 }
 
-int32_t base_move_velocity(chassis_t chassis, const int32_t x_velocity,
-                           const int32_t y_velocity, const int32_t w_velocity) {
-  motor_move_velocity(chassis.frontLeftMotor,
-                      y_velocity + x_velocity + w_velocity);
-  motor_move_velocity(chassis.frontRightMotor,
-                      y_velocity - x_velocity - w_velocity);
-  motor_move_velocity(chassis.backLeftMotor,
-                      y_velocity - x_velocity + w_velocity);
-  motor_move_velocity(chassis.backRightMotor,
-                      y_velocity + x_velocity - w_velocity);
+int32_t base_move_velocity(chassis_t chassis, const int32_t x_velocity, const int32_t y_velocity, const int32_t w_velocity) {
+  motor_move_velocity(chassis.frontLeftMotor, y_velocity + x_velocity + w_velocity);
+  motor_move_velocity(chassis.frontRightMotor, y_velocity - x_velocity - w_velocity);
+  motor_move_velocity(chassis.backLeftMotor, y_velocity - x_velocity + w_velocity);
+  motor_move_velocity(chassis.backRightMotor, y_velocity + x_velocity - w_velocity);
   return 1;
 }
 
-int32_t base_set_gearing(chassis_t chassis,
-                         const pros::motor_gearset_e gearset) {
+int32_t base_brake(chassis_t chassis) {
+  motor_brake(chassis.frontLeftMotor);
+  motor_brake(chassis.frontRightMotor);
+  motor_brake(chassis.backLeftMotor);
+  motor_brake(chassis.backRightMotor);
+  return 1;
+}
+
+int32_t base_set_brake_mode(chassis_t chassis, pros::motor_brake_mode_e_t mode) {
+  motor_set_brake_mode(chassis.frontLeftMotor, mode);
+  motor_set_brake_mode(chassis.frontRightMotor, mode);
+  motor_set_brake_mode(chassis.backLeftMotor, mode);
+  motor_set_brake_mode(chassis.backRightMotor, mode);
+  return 1;
+}
+
+int32_t base_set_gearing(chassis_t chassis, const pros::motor_gearset_e gearset) {
   motor_set_gearing(chassis.frontLeftMotor, gearset);
   motor_set_gearing(chassis.frontRightMotor, gearset);
   motor_set_gearing(chassis.backLeftMotor, gearset);

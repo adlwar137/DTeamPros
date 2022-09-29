@@ -80,10 +80,7 @@ void initialize() {
   motor_set_reversed(discShooter.motorA, true);
   motor_set_reversed(INTAKE, false);
 
-  motor_set_brake_mode(base.frontLeftMotor, MOTOR_BRAKE_COAST);
-  motor_set_brake_mode(base.frontRightMotor, MOTOR_BRAKE_COAST);
-  motor_set_brake_mode(base.backLeftMotor, MOTOR_BRAKE_COAST);
-  motor_set_brake_mode(base.backRightMotor, MOTOR_BRAKE_COAST);
+  base_set_brake_mode(base, MOTOR_BRAKE_COAST);
 
   motor_set_brake_mode(discShooter.motorA, MOTOR_BRAKE_COAST);
   motor_set_brake_mode(discShooter.motorB, MOTOR_BRAKE_COAST);
