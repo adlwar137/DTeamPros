@@ -144,13 +144,28 @@ void competition_initialize() { printf("comp init"); }
  * from where it left off.
  */
 void autonomous() {
-  flywheel_spin(discShooter, 127);
+  base_set_brake_mode(base, MOTOR_BRAKE_BRAKE);
+  base_move_velocity(base, 0, 200, 0);
+  motor_move(INTAKE, -127);
+  delay(500);
+  base_brake(base);
+  motor_brake(INTAKE);
 
-  adi_digital_write(PISTON, true);
+  base_move_velocity(base, 200, -175, 0);
+  delay(2800);
+  base_brake(base);
 
-  delay(2000);
+  delay(500); 
 
-  adi_digital_write(PISTON, false);
+  base_move_velocity(base, 0, 0, 200);
+  delay(300);
+  base_brake(base);
+
+  base_move_velocity(base, 0, 200, 0);
+  motor_move(INTAKE, -127);
+  delay(1000);
+  motor_brake(INTAKE);
+  base_brake(base);
 }
 
 /**
