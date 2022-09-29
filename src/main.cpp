@@ -1,14 +1,13 @@
 #include "main.h"
 #include "chassis.h"
 #include "flywheel.h"
+#include "odometry.h"
 #include "pros/misc.h"
 #include "pros/motors.h"
 
 using namespace pros::c;
 
-#define TRACKING_WHEEL_DIAMETER 2.75
-#define LEFT_TRACKING_WHEEL_DISTANCE_FROM_CENTER 3.75
-#define RIGHT_TRACKING_WHEEL_DISTANCE_FROM_CENTER 3.5
+
 
 const int32_t MOTOR_MAX_VOLTAGE = 127;
 const int32_t MOTOR_MIN_VOLTAGE = -127;
@@ -44,7 +43,10 @@ adi_encoder_t strafe_encoder;
 chassis_t base;
 flywheel discShooter;
 
-bool baseForward = true;
+
+// odometry stuff
+tracking_params_t params;
+pose_t pose;
 
 static int32_t remap(int32_t value, int32_t from1, int32_t to1, int32_t from2, int32_t to2) {
   return (int)((double)(value - from1) / (to1 - from1) * (to2 - from2) + from2);
@@ -92,13 +94,27 @@ void initialize() {
 
   adi_pin_mode(PISTON,OUTPUT);
 
+  adi_encoder_reset(left_encoder);
+  adi_encoder_reset(right_encoder);
+  adi_encoder_reset(strafe_encoder);
+
   if (usd_is_installed()) {
     printf("SD card installed :(\n");
   } else {
     printf("SD card installed :)\n");
   }
 
-  
+  params.left_encoder = left_encoder;
+  params.right_encoder = right_encoder;
+  params.strafe_encoder = strafe_encoder;
+
+  pose.x = 0;
+  pose.y = 0;
+  pose.w = 0;
+
+  params.pose = pose;
+
+  pros::task_t odometry = task_create(odometry_track, (void*)(&params), TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Jeffrey Hamil The 3rd");
 }
 
 /**
@@ -171,10 +187,6 @@ void opcontrol() {
       adi_digital_write(PISTON, false);
     }
 
-    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_X) == 1) {
-      baseForward = !baseForward;
-    } 
-
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_L1)) {
       flywheel_spin(discShooter, 127);
     }
@@ -191,39 +203,38 @@ void opcontrol() {
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_A)) {
       motor_move(INTAKE, -127);
     }
-    
 
-    double leftDistance = ((double)(ext_adi_encoder_get(left_encoder)) / 360) * M_PI * TRACKING_WHEEL_DIAMETER;
-    double rightDistance = ((double)(ext_adi_encoder_get(right_encoder)) / 360) * M_PI * TRACKING_WHEEL_DIAMETER;
+    double desired_controller_x = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X);
+    double desired_controller_y = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y);
+    double desired_controller_w = controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X);
 
-    double prevLeftDistance;
-    double prevRightDistance;
+    double controller_x;
+    double controller_y;
+    double controller_w;
 
-    double deltaLeftDistance = leftDistance - prevLeftDistance;
-    double deltaRightDistance = rightDistance - prevRightDistance;
+    double translation_gradient = 0.1;
+    double rotation_gradient = 0.2;
 
-    //radians
-    double deltaheading = (deltaLeftDistance - deltaRightDistance) / (LEFT_TRACKING_WHEEL_DISTANCE_FROM_CENTER + RIGHT_TRACKING_WHEEL_DISTANCE_FROM_CENTER);
-    
-    double heading = heading + deltaheading;
-    
-    //printf("leftDistance: %f, rightDistance: %f\n", leftDistance, rightDistance);
-    printf("heading: %f\n", (heading/M_PI) * 180);
+    //might cause issues with exact values due to imprecise doubles
+    controller_x += (desired_controller_x - controller_x) * translation_gradient;
+    controller_y += (desired_controller_y - controller_y) * translation_gradient;
+    controller_w += (desired_controller_w - controller_w) * rotation_gradient;
 
-    prevLeftDistance = leftDistance;
-    prevRightDistance = rightDistance;
-
-    if(baseForward) {
-      base_move_velocity(base,
-      remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X), -127, 127, -200, 200),
-      remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y), -127, 127, -200, 200),
-      remap(controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X), -127, 127, -200, 200));
-    } else {
-      base_move_velocity(base,
-      remap(-controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X), -127, 127, -200, 200),
-      remap(-controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y), -127, 127, -200, 200),
-      remap(-controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X), -127, 127, -200, 200));
+    if(desired_controller_x < 0.000001 && desired_controller_x > -0.000001) {
+      controller_x = 0;
     }
+    if(desired_controller_y < 0.000001 && desired_controller_y > -0.000001) {
+      controller_y = 0;
+    }
+
+    double field_based_controller_x = controller_x * cos(pose.w) - controller_y * sin(pose.w);
+    double field_based_controller_y = controller_x * sin(pose.w) + controller_y * cos(pose.w);
+
+    base_move_velocity(base,
+    remap(field_based_controller_x, -127, 127, -200, 200),
+    remap(field_based_controller_y, -127, 127, -200, 200),
+    remap(controller_w, -127, 127, -200, 200));
+
     
 
     //flywheel_spin(discShooter, controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_Y));
