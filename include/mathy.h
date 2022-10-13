@@ -12,7 +12,7 @@ typedef struct vector3d {
     double x; //inches
     double y; //inches
     double w; //radians
-} vector3d;
+} vector3d_t;
 
 vector_t mathy_rotate_vector(vector_t vec, double angle); 
 
