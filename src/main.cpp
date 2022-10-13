@@ -22,9 +22,21 @@ flywheel discShooter;
 tracking_params_t params;
 vector3d pose;
 
+// declare subsystems here
+bool isForward = true;
+
 //no idea if works or not
 static bool within(double x, double y, double tolerance) {
   return fabs(y - x) < tolerance;
+}
+
+//roller swap
+void autonomous_roller_swap() {
+  base_move_velocity(base, 0, 200, 0);
+  motor_move(INTAKE, -127);
+  delay(500);
+  motor_brake(INTAKE);
+  base_brake(base);
 }
 
 /**
@@ -51,8 +63,8 @@ void initialize() {
   motor_set_brake_mode(PUNCHER, MOTOR_BRAKE_BRAKE);
   
   // Set specific motor directions
-  motor_set_reversed(base.frontLeftMotor, true);
-  motor_set_reversed(base.backLeftMotor, true);
+  motor_set_reversed(base.backRightMotor, true);
+  motor_set_reversed(base.frontRightMotor, true);
   motor_set_reversed(discShooter.motorA, true);
   motor_set_reversed(INTAKE, false);
   motor_set_reversed(PUNCHER, true);
@@ -60,8 +72,8 @@ void initialize() {
   // Set brake modes
   base_set_brake_mode(base, MOTOR_BRAKE_COAST);
 
-  motor_set_brake_mode(discShooter.motorA, MOTOR_BRAKE_COAST);
-  motor_set_brake_mode(discShooter.motorB, MOTOR_BRAKE_COAST);
+  motor_set_brake_mode(discShooter.motorA, MOTOR_BRAKE_BRAKE);
+  motor_set_brake_mode(discShooter.motorB, MOTOR_BRAKE_BRAKE);
 
   // Initialize encoders
   left_encoder = adi_encoder_init(ADI_ENCODER_LEFT_TOP, ADI_ENCODER_LEFT_BOTTOM, false);
@@ -72,7 +84,7 @@ void initialize() {
   gps_initialize_full(GPS_RIGHT, 0, 0, 180, 0, 0);
 
   //set the piston adi port to output
-  adi_pin_mode(PISTON,OUTPUT);
+  adi_pin_mode(LED,OUTPUT);
 
   // Reset encoder tick positions
   adi_encoder_reset(left_encoder);
@@ -100,6 +112,47 @@ void initialize() {
   //create the odometry task to run in the background
   //That sweet sweet absolute position
   pros::task_t odometry = task_create(odometry_track, (void*)(&params), TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sir William Rowan Hamilton");
+/*
+  lv_obj_t * scr1;
+  scr1 = lv_obj_create(NULL, NULL);
+
+  lv_obj_t * background;
+  background = lv_obj_create(NULL, NULL);
+  lv_obj_set_size(background, 480, 272);
+  lv_obj_set_style(background, &lv_style_scr);
+  lv_obj_align(background, NULL, LV_ALIGN_CENTER, 0, 0);
+  
+
+  lv_obj_t * scr2;
+  scr2 = lv_obj_create(NULL, NULL);
+  lv_obj_set_size(scr2, 480, 272);
+  lv_obj_set_style(scr2, &lv_style_pretty);
+  lv_obj_align(scr2, NULL, LV_ALIGN_CENTER, 0, 0);
+
+  lv_scr_load(scr1);
+
+  lv_obj_t * obj1;
+  obj1 = lv_obj_create(lv_scr_act(), NULL);
+  lv_obj_set_size(obj1, 100, 100);
+  lv_obj_set_style(obj1, &lv_style_plain_color);
+  lv_obj_align(obj1, NULL, LV_ALIGN_CENTER, 0, -60);
+
+  lv_obj_t * robLabel;
+  robLabel = lv_label_create(lv_scr_act(), NULL);
+  lv_label_set_long_mode(robLabel, LV_LABEL_LONG_BREAK);
+  lv_label_set_recolor(robLabel, true);
+  lv_label_set_align(robLabel, LV_LABEL_ALIGN_CENTER);
+  lv_label_set_text(robLabel, "#000000 RobOS");
+
+  lv_obj_set_width(robLabel, 100);
+  lv_obj_align(robLabel, NULL, LV_ALIGN_CENTER, 0, 0);
+
+  lv_obj_t * bar1 = lv_bar_create(lv_scr_act(), NULL);
+  lv_obj_set_size(bar1, 200, 30);
+  lv_obj_align(bar1, NULL, LV_ALIGN_CENTER, 0, 30);
+  lv_bar_set_style(bar1, LV_BAR_STYLE_INDIC, &lv_style_pretty_color);
+  lv_bar_set_value_anim(bar1, 100, 2000);
+  */
 }
 
 /**
@@ -133,14 +186,16 @@ void competition_initialize() { printf("comp init"); }
  */
 void autonomous() {
 
-  adi_digital_write(PISTON, false);
+  auton_roller_swap();
 
    //score first roller
+   /*
   base_move_velocity(base, 0, 200, 0);
   motor_move(INTAKE, -127);
   delay(500);
   motor_brake(INTAKE);
   base_brake(base);
+  */
   /*
   base_set_brake_mode(base, MOTOR_BRAKE_BRAKE);
 
@@ -174,9 +229,7 @@ void autonomous() {
   delay(300);
 
    while(!(within(pose.w, WDesired, 0.05))) {
-    WError = mathy_angle_wrap(WDesired - pose.w);
 
-    WVelocity = PIDController_calculate(WPID, WError);
 
     base_move_velocity(base, 0, 0, WVelocity);
 
@@ -251,11 +304,25 @@ void autonomous() {
     delay(20);
   }
   base_brake(base);
+*/
+/*
+  double TranslationalVelocity, WVelocity;
+  double XDesired = 0, YDesired = 0, WDesired = 0;
+  double TranslationalError, WError;
 
-  XDesired-= 2.5*24;
-  YDesired+= 2.5*24;
+  PIDController_t TranslationPID = PIDController_create(8, 0, 0);
+  PIDController_t WPID = PIDController_create(0, 0, 0);
 
-    while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5) && within(pose.w, WDesired, 0.1))) {
+  delay(2000);
+
+  pose.x = 0;
+  pose.y = 0;
+  pose.w = 0;
+
+  XDesired= 24*3.5;
+  YDesired= -24*3.5;
+
+  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5) && within(pose.w, WDesired, 0.1))) {
     
     TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
     WError = mathy_angle_wrap(WDesired - pose.w); //wrap angle to signed smallest distance
@@ -269,6 +336,12 @@ void autonomous() {
     //add the heading to rotate the vector to the global space
     distanceVectorAngle += pose.w;
 
+    if((TranslationalVelocity + WVelocity) > 200 || (TranslationalVelocity + WVelocity) < -200) {
+      double multi = (double)200/(TranslationalVelocity+WVelocity);
+      TranslationalVelocity = multi*TranslationalVelocity;
+      WVelocity = multi*WVelocity;
+    }
+
     motor_move_velocity(FRONTLEFT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) + WVelocity);
     motor_move_velocity(BACKLEFT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) + WVelocity);
     motor_move_velocity(BACKRIGHT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) - WVelocity);
@@ -277,6 +350,41 @@ void autonomous() {
     delay(20);
   }
   base_brake(base);
+  
+  delay(2000);
+*/
+/*
+  WDesired = M_PI/2;
+
+  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5) && within(pose.w, WDesired, 0.1))) {
+    
+    TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
+    WError = mathy_angle_wrap(WDesired - pose.w); //wrap angle to signed smallest distance
+    
+    TranslationalVelocity = PIDController_calculate(TranslationPID, TranslationalError);
+    WVelocity = PIDController_calculate(WPID, WError);
+
+    //get the angle in radians of the remaining distance vector
+    double distanceVectorAngle = atan2(YDesired - pose.y, XDesired - pose.x);
+
+    //add the heading to rotate the vector to the global space
+    distanceVectorAngle += pose.w;
+
+    if((TranslationalVelocity + WVelocity) > 200 || (TranslationalVelocity + WVelocity) < -200) {
+      double multi = (double)200/(TranslationalVelocity+WVelocity);
+      TranslationalVelocity = multi*TranslationalVelocity;
+      WVelocity = multi*WVelocity;
+    }
+
+    motor_move_velocity(FRONTLEFT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) + WVelocity);
+    motor_move_velocity(BACKLEFT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) + WVelocity);
+    motor_move_velocity(BACKRIGHT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) - WVelocity);
+    motor_move_velocity(FRONTRIGHT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) - WVelocity);
+  
+    delay(20);
+  
+  base_brake(base);
+  }
 */
 
 /*
@@ -306,7 +414,13 @@ void autonomous() {
 void opcontrol() {
   printf("opcontrol");
 
+  PIDController_t WPID = PIDController_create(128, 0, 0);
+
   while (1) {
+    //printf("GPS heading %f \n", (gps_get_heading(GPS_LEFT) + (gps_get_heading(GPS_RIGHT) - 180)) / 2);
+
+    //printf("GPS xPosition: %f, GPS yPosition: %f, GPS heading: %f\n", locationSensor_get_pose().x, locationSensor_get_pose().y, locationSensor_get_pose().w);
+
     if(controller_get_digital(MASTER_CONTROLLER, DIGITAL_B) == 1) {
       motor_move(PUNCHER, 127);
     } else {
@@ -317,17 +431,20 @@ void opcontrol() {
       isForward = !isForward;
     }
 
-    if(controller_get_digital(MASTER_CONTROLLER, DIGITAL_LEFT) == 1) {
-      adi_digital_write(PISTON, true);
-    } else {
-      adi_digital_write(PISTON, false);
-    }
-
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_L1)) {
       flywheel_spin(discShooter, 127);
     }
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_L2)) {
       flywheel_spin(discShooter, 0);
+    }
+
+    //printf("flywheelASpeed: %f, flywheelATemp: %f, flywheelBSpeed: %f, flywheelBTemp: %f\n", motor_get_actual_velocity(FLYWHEELA), motor_get_temperature(FLYWHEELA), motor_get_actual_velocity(FLYWHEELB), motor_get_temperature(FLYWHEELB));
+
+    if(((motor_get_actual_velocity(FLYWHEELA) + motor_get_actual_velocity(FLYWHEELB)) / 2) > 450 ) {
+      adi_digital_write(LED, false);
+      controller_rumble(MASTER_CONTROLLER, "-");
+    } else {
+      adi_digital_write(LED, true);
     }
 
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_R1)) {
@@ -372,15 +489,36 @@ void opcontrol() {
       mathy_remap(desired_controller_y, -127, 127, -200, 200),
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
     } else {
+/*
+      double redGoal = atan2(0 - locationSensor_get_pose().x, 0 - locationSensor_get_pose().y);
+      double blueGoal = atan2(-48, -48);
+
+      double WDesired = mathy_angle_wrap(redGoal);
+
+      //printf("heading: %f\n", WDesired);
+      printf("atan test: %f\n", mathy_to_degrees(atan2(48 - locationSensor_get_pose().x,48 - locationSensor_get_pose().y) - pose.w));
+
+      double WError = mathy_angle_wrap(atan2(48 - locationSensor_get_pose().x,48 - locationSensor_get_pose().y) - pose.w);
+
+      double WVelocity = PIDController_calculate(WPID, WError);
+
+      WVelocity = mathy_clamp(WVelocity, -127, 127);
+*/
       base_move_velocity(base,
       mathy_remap(-desired_controller_x, -127, 127, -200, 200),
       mathy_remap(-desired_controller_y, -127, 127, -200, 200),
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
     }
-    
-  
 
-    printf("x: %f, Y: %f, W: %f\n", pose.x, pose.y, pose.w);
+/*
+    base_move_velocity(base,
+      mathy_remap(field_based_controller_x, -127, 127, -200, 200),
+      mathy_remap(field_based_controller_y, -127, 127, -200, 200),
+      mathy_remap(desired_controller_w, -127, 127, -200, 200));
+*/
+
+    //printf("x: %f, Y: %f, W: %f\n", pose.x, pose.y, pose.w);
+    //printf("left: %d, right: %d, strafe: %d\n", adi_encoder_get(left_encoder), adi_encoder_get(right_encoder), adi_encoder_get(strafe_encoder));
 
     delay(20);
   }
