@@ -1,57 +1,25 @@
 #include "main.h"
+#include "constants.h"
 #include "chassis.h"
 #include "flywheel.h"
 #include "odometry.h"
 #include "mathy.h"
 #include "PIDController.h"
+#include "auton.h"
+#include "locationSensor.h"
 #include "pros/misc.h"
 #include "pros/motors.h"
 
 using namespace pros::c;
 
-const int32_t MOTOR_MAX_VOLTAGE = 127;
-const int32_t MOTOR_MIN_VOLTAGE = -127;
-
-const uint8_t FRONTRIGHT = 1;
-const uint8_t BACKRIGHT = 2;
-const uint8_t BACKLEFT = 3;
-const uint8_t FRONTLEFT = 4;
-
-const uint8_t FLYWHEELA = 5;
-const uint8_t FLYWHEELB = 7;
-
-const uint8_t INTAKE = 10;
-
-const uint8_t PUNCHER = 9;
-
-const uint8_t PISTON = 8;
-
-const uint8_t ADI_ENCODER_RIGHT_TOP = 1;
-const uint8_t ADI_ENCODER_RIGHT_BOTTOM = 2;
-
-const uint8_t ADI_ENCODER_LEFT_TOP = 3;
-const uint8_t ADI_ENCODER_LEFT_BOTTOM = 4;
-
-const uint8_t ADI_ENCODER_STRAFE_TOP = 5;
-const uint8_t ADI_ENCODER_STRAFE_BOTTOM = 6;
-
-const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CONTROLLER_MASTER;
-
 adi_encoder_t right_encoder;
 adi_encoder_t left_encoder;
 adi_encoder_t strafe_encoder;
 
-// declare subsystems here
 chassis_t base;
 flywheel discShooter;
 
-bool isForward = true;
-
-
-// odometry task paramaters
 tracking_params_t params;
-
-//global pose
 vector3d pose;
 
 //no idea if works or not
@@ -99,6 +67,9 @@ void initialize() {
   left_encoder = adi_encoder_init(ADI_ENCODER_LEFT_TOP, ADI_ENCODER_LEFT_BOTTOM, false);
   right_encoder = adi_encoder_init(ADI_ENCODER_RIGHT_TOP, ADI_ENCODER_RIGHT_BOTTOM, false);
   strafe_encoder = adi_encoder_init(ADI_ENCODER_STRAFE_TOP, ADI_ENCODER_STRAFE_BOTTOM, false);
+
+  gps_initialize_full(GPS_LEFT, 0, 0, 0, 0, 0);
+  gps_initialize_full(GPS_RIGHT, 0, 0, 180, 0, 0);
 
   //set the piston adi port to output
   adi_pin_mode(PISTON,OUTPUT);

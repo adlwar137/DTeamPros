@@ -21,7 +21,7 @@ const uint8_t INTAKE = 10;
 
 const uint8_t PUNCHER = 9;
 
-const uint8_t PISTON = 8;
+const uint8_t LED = 8;
 
 const uint8_t ADI_ENCODER_RIGHT_TOP = 1;
 const uint8_t ADI_ENCODER_RIGHT_BOTTOM = 2;
@@ -31,6 +31,9 @@ const uint8_t ADI_ENCODER_LEFT_BOTTOM = 4;
 
 const uint8_t ADI_ENCODER_STRAFE_TOP = 5;
 const uint8_t ADI_ENCODER_STRAFE_BOTTOM = 6;
+
+const uint8_t GPS_LEFT = 12;
+const uint8_t GPS_RIGHT = 11;
 
 const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CONTROLLER_MASTER;
 
@@ -45,4 +48,4 @@ extern flywheel discShooter;
 extern tracking_params_t params;
 
 //global pose
-extern vector3d pose;
+extern vector3d_t pose;
