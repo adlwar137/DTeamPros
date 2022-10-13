@@ -10,7 +10,13 @@ int32_t base_move(chassis_t chassis, const int32_t x_voltage, const int32_t y_vo
   return 1;
 }
 
-int32_t base_move_velocity(chassis_t chassis, const int32_t x_velocity, const int32_t y_velocity, const int32_t w_velocity) {
+int32_t base_move_velocity(chassis_t chassis, int32_t x_velocity, int32_t y_velocity, int32_t w_velocity) {
+  if((x_velocity + y_velocity + w_velocity) > 200) {
+    double multi = (double)200/(x_velocity+y_velocity+w_velocity);
+    x_velocity = x_velocity * multi;
+    y_velocity = y_velocity * multi;
+    w_velocity = w_velocity * multi;
+  }
   motor_move_velocity(chassis.frontLeftMotor, y_velocity + x_velocity + w_velocity);
   motor_move_velocity(chassis.frontRightMotor, y_velocity - x_velocity - w_velocity);
   motor_move_velocity(chassis.backLeftMotor, y_velocity - x_velocity + w_velocity);
