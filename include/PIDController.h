@@ -1,5 +1,5 @@
-#include "main.h"
 #pragma once
+#include "main.h"
 
 using namespace pros::c;
 
