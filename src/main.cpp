@@ -188,14 +188,99 @@ void competition_initialize() { printf("comp init"); }
  * from where it left off.
  */
 void autonomous() {
+/*
+  PIDController_t WPID = PIDController_create(32, 0, 0);
 
+  while(!(within(pose.w, M_PI, 0.001))) {
+
+    double WError = mathy_angle_wrap(M_PI - pose.w);
+
+    double WVelocity = PIDController_calculate(WPID, WError);
+
+    base_move_velocity(base, 0, 0, WVelocity);
+
+    delay(20);
+  }
+  
+  base_brake(base);
+*/
+/*
   auton_roller_swap();
 
-  base_move_velocity(base, -200, -200, 0);
+  base_move_velocity(base, 0, -200, 0);
 
-  delay(3500);
+  delay(250);
+  */
+  double XDesired = -24 * 2;
+  double YDesired = 24 * 2;
+
+  PIDController_t TranslationPID = PIDController_create(10, 0, 0);
+  //PIDController WPID = PIDController_create(4, 0, 0);
+
+  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5))) {
+    
+    double TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
+    
+    double TranslationalVelocity = PIDController_calculate(TranslationPID, TranslationalError);
+
+    //get the angle in radians of the remaining distance vector
+    double distanceVectorAngle = atan2(YDesired - pose.y, XDesired - pose.x);
+
+    //add the heading to rotate the vector to the global space
+    distanceVectorAngle += pose.w;
+
+    double xVelocity = TranslationalVelocity * sin(distanceVectorAngle);
+    double yVelocity = TranslationalVelocity * cos(distanceVectorAngle);
+
+
+    motor_move_velocity(FRONTLEFT, -yVelocity - xVelocity);
+    motor_move_velocity(BACKLEFT, -yVelocity + xVelocity);
+    motor_move_velocity(BACKRIGHT, -yVelocity - xVelocity);
+    motor_move_velocity(FRONTRIGHT, -yVelocity + xVelocity);
+  
+    delay(20);
+  }
 
   base_brake(base);
+/*
+  base_move_velocity(base, 0, -200, 0);
+
+  delay(750);
+
+  base_brake(base);
+
+  //pose.w = 0;
+
+  while(!(within(gps_get_heading(GPS_RIGHT), 270, 1))) {
+
+    double WError = mathy_angle_wrap(270 - gps_get_heading(GPS_RIGHT));
+
+    double WVelocity = PIDController_calculate(WPID, WError);
+
+    base_move_velocity(base, 0, 0, WVelocity);
+
+    delay(20);
+  }
+
+  base_brake(base);
+  */
+/*
+  base_move_velocity(base, 0, 200, 0);
+  motor_move(INTAKE, -127);
+  delay(1000);
+  motor_brake(INTAKE);
+  base_brake(base);
+*/
+
+
+
+
+
+
+
+
+
+
 
    //score first roller
    /*
@@ -426,7 +511,7 @@ void opcontrol() {
   PIDController_t WPID = PIDController_create(128, 0, 0);
 
   while (1) {
-    printf("OdometryHeading: %f, LocationSensorHeading: %f\n", mathy_to_degrees(pose.w), 0);
+    printf("OdometryHeading: %f\n", mathy_to_degrees(pose.w));
 
     if(controller_get_digital(MASTER_CONTROLLER, DIGITAL_B) == 1) {
       motor_move(PUNCHER, 127);
