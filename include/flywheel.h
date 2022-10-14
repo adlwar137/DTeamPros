@@ -1,17 +1,26 @@
 #pragma once
 #include "main.h"
 
-typedef struct flywheel {
-    uint8_t motorA;
-    uint8_t motorB;
-} flywheel;
+class Flywheel {
+  public:
+    Flywheel(pros::Motor* leftMotor,
+             pros::Motor* rightMotor);
+    
+    Flywheel(pros::Motor* leftMotor,
+             pros::Motor* rightMotor,
+             pros::motor_gearset_e_t gearset);
 
-int32_t flywheel_spin(flywheel Flywheel, const int8_t speed);
+  int32_t set_gearing(pros::motor_gearset_e_t gearing);
 
-int32_t flywheel_set_brake_mode(flywheel Flywheel, const pros::motor_brake_mode_e_t brakemode);
+  int32_t set_brake_mode(pros::motor_brake_mode_e_t brakemode);
 
-int32_t flywheel_brake(flywheel Flywheel);
+  double get_actual_average_velocity();
 
-int32_t flywheel_set_gearing(flywheel Flywheel, const pros::motor_gearset_e_t gearset);
+  int32_t spin(int32_t voltage);
 
-int32_t flywheel_set_reversed(flywheel Flywheel, const bool reversed);
+  int32_t brake();
+  private:
+    pros::Motor* leftMotor;
+    pros::Motor* rightMotor;
+    pros::motor_gearset_e_t gearset;
+};
