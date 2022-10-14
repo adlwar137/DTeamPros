@@ -57,6 +57,9 @@ void initialize() {
   discShooter.motorA = FLYWHEELA;
   discShooter.motorB = FLYWHEELB;
 
+  gps_set_data_rate(GPS_LEFT, 5);
+  gps_set_data_rate(GPS_RIGHT, 5);
+
   // Set motor gearing
   base_set_gearing(base, pros::E_MOTOR_GEARSET_18);
   flywheel_set_gearing(discShooter, pros::E_MOTOR_GEARSET_06);
