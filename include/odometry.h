@@ -1,7 +1,7 @@
 #pragma once
 #include "main.h"
 #include "mathy.h"
-#include "constants.h"
+#include "config.h"
 
 using namespace pros::c;
 

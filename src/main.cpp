@@ -1,8 +1,8 @@
 #include "main.h"
-#include "constants.h"
+#include "odometry.h"
+#include "config.h"
 #include "chassis.h"
 #include "flywheel.h"
-#include "odometry.h"
 #include "mathy.h"
 #include "PIDController.h"
 #include "auton.h"
@@ -16,9 +16,6 @@ adi_encoder_t right_encoder;
 adi_encoder_t left_encoder;
 adi_encoder_t strafe_encoder;
 
-chassis_t base;
-flywheel discShooter;
-
 tracking_params_t params;
 vector3d pose;
 
@@ -28,15 +25,6 @@ bool isForward = true;
 //no idea if works or not
 static bool within(double x, double y, double tolerance) {
   return fabs(y - x) < tolerance;
-}
-
-//roller swap
-void autonomous_roller_swap() {
-  base_move_velocity(base, 0, 200, 0);
-  motor_move(INTAKE, -127);
-  delay(500);
-  motor_brake(INTAKE);
-  base_brake(base);
 }
 
 /**
@@ -49,31 +37,18 @@ void initialize() {
   printf("Initializing");
 
   // Initialize motors
-  base.frontLeftMotor = FRONTLEFT;
-  base.frontRightMotor = FRONTRIGHT;
-  base.backLeftMotor = BACKLEFT;
-  base.backRightMotor = BACKRIGHT;
-
-  discShooter.motorA = FLYWHEELA;
-  discShooter.motorB = FLYWHEELB;
 
   // Set motor gearing
-  base_set_gearing(base, pros::E_MOTOR_GEARSET_18);
-  flywheel_set_gearing(discShooter, pros::E_MOTOR_GEARSET_06);
   motor_set_brake_mode(PUNCHER, MOTOR_BRAKE_BRAKE);
   
   // Set specific motor directions
-  motor_set_reversed(base.backRightMotor, true);
-  motor_set_reversed(base.frontRightMotor, true);
-  motor_set_reversed(discShooter.motorA, true);
   motor_set_reversed(INTAKE, false);
   motor_set_reversed(PUNCHER, true);
 
   // Set brake modes
-  base_set_brake_mode(base, MOTOR_BRAKE_COAST);
+  base.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_COAST);
 
-  motor_set_brake_mode(discShooter.motorA, MOTOR_BRAKE_BRAKE);
-  motor_set_brake_mode(discShooter.motorB, MOTOR_BRAKE_BRAKE);
+  discShooter.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_BRAKE);
 
   // Initialize encoders
   left_encoder = adi_encoder_init(ADI_ENCODER_LEFT_TOP, ADI_ENCODER_LEFT_BOTTOM, false);
@@ -185,8 +160,6 @@ void competition_initialize() { printf("comp init"); }
  * from where it left off.
  */
 void autonomous() {
-
-  auton_roller_swap();
 
    //score first roller
    /*
@@ -432,15 +405,15 @@ void opcontrol() {
     }
 
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_L1)) {
-      flywheel_spin(discShooter, 127);
+      discShooter.spin(127);
     }
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_L2)) {
-      flywheel_spin(discShooter, 0);
+      discShooter.brake();
     }
 
     //printf("flywheelASpeed: %f, flywheelATemp: %f, flywheelBSpeed: %f, flywheelBTemp: %f\n", motor_get_actual_velocity(FLYWHEELA), motor_get_temperature(FLYWHEELA), motor_get_actual_velocity(FLYWHEELB), motor_get_temperature(FLYWHEELB));
 
-    if(((motor_get_actual_velocity(FLYWHEELA) + motor_get_actual_velocity(FLYWHEELB)) / 2) > 450 ) {
+    if(discShooter.get_actual_average_velocity() > 450 ) {
       adi_digital_write(LED, false);
       controller_rumble(MASTER_CONTROLLER, "-");
     } else {
@@ -484,7 +457,7 @@ void opcontrol() {
     double field_based_controller_y = desired_controller_x * sin(pose.w) + desired_controller_y * cos(pose.w);
 
     if(isForward) {
-      base_move_velocity(base,
+      base.move_velocity(
       mathy_remap(desired_controller_x, -127, 127, -200, 200),
       mathy_remap(desired_controller_y, -127, 127, -200, 200),
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
@@ -504,7 +477,7 @@ void opcontrol() {
 
       WVelocity = mathy_clamp(WVelocity, -127, 127);
 */
-      base_move_velocity(base,
+      base.move_velocity(
       mathy_remap(-desired_controller_x, -127, 127, -200, 200),
       mathy_remap(-desired_controller_y, -127, 127, -200, 200),
       mathy_remap(desired_controller_w, -127, 127, -200, 200));

@@ -1,6 +1,6 @@
 #pragma once
 #include "main.h"
-#include "constants.h"
+#include "config.h"
 #include "mathy.h"
 
 double locationSensor_get_heading();
