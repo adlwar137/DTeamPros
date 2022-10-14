@@ -51,8 +51,6 @@ extern adi_encoder_t strafe_encoder;
 extern chassis_t base;
 extern flywheel discShooter;
 
-// odometry task paramaters
-extern tracking_params_t params;
 
 //global pose
 extern vector3d_t pose;

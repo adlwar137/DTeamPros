@@ -188,6 +188,12 @@ void autonomous() {
 
   auton_roller_swap();
 
+  base_move_velocity(base, -200, -200, 0);
+
+  delay(3500);
+
+  base_brake(base);
+
    //score first roller
    /*
   base_move_velocity(base, 0, 200, 0);
@@ -417,9 +423,7 @@ void opcontrol() {
   PIDController_t WPID = PIDController_create(128, 0, 0);
 
   while (1) {
-    //printf("GPS heading %f \n", (gps_get_heading(GPS_LEFT) + (gps_get_heading(GPS_RIGHT) - 180)) / 2);
-
-    //printf("GPS xPosition: %f, GPS yPosition: %f, GPS heading: %f\n", locationSensor_get_pose().x, locationSensor_get_pose().y, locationSensor_get_pose().w);
+    printf("OdometryHeading: %f, LocationSensorHeading: %f\n", mathy_to_degrees(pose.w), 0);
 
     if(controller_get_digital(MASTER_CONTROLLER, DIGITAL_B) == 1) {
       motor_move(PUNCHER, 127);
@@ -489,25 +493,25 @@ void opcontrol() {
       mathy_remap(desired_controller_y, -127, 127, -200, 200),
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
     } else {
-/*
+
       double redGoal = atan2(0 - locationSensor_get_pose().x, 0 - locationSensor_get_pose().y);
       double blueGoal = atan2(-48, -48);
 
       double WDesired = mathy_angle_wrap(redGoal);
 
       //printf("heading: %f\n", WDesired);
-      printf("atan test: %f\n", mathy_to_degrees(atan2(48 - locationSensor_get_pose().x,48 - locationSensor_get_pose().y) - pose.w));
+      printf("atan test: %f\n", mathy_to_degrees(atan2(48 - locationSensor_get_pose().x,48 - locationSensor_get_pose().y) - mathy_to_radians(gps_get_heading_raw(GPS_LEFT) + 90)));
 
-      double WError = mathy_angle_wrap(atan2(48 - locationSensor_get_pose().x,48 - locationSensor_get_pose().y) - pose.w);
+      double WError = mathy_angle_wrap(atan2(48 - locationSensor_get_pose().x,48 - locationSensor_get_pose().y) - mathy_to_radians(gps_get_heading_raw(GPS_LEFT) + 90));
 
       double WVelocity = PIDController_calculate(WPID, WError);
 
       WVelocity = mathy_clamp(WVelocity, -127, 127);
-*/
+
       base_move_velocity(base,
       mathy_remap(-desired_controller_x, -127, 127, -200, 200),
       mathy_remap(-desired_controller_y, -127, 127, -200, 200),
-      mathy_remap(desired_controller_w, -127, 127, -200, 200));
+      mathy_remap(WVelocity, -127, 127, -200, 200));
     }
 
 /*
