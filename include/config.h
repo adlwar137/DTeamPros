@@ -1,10 +1,8 @@
 #pragma once
 #include "main.h"
+#include "odometry.h"
 #include "flywheel.h"
 #include "chassis.h"
-#include "odometry.h"
-
-using namespace pros::c;
 
 #define TRACKING_WHEEL_DIAMETER 2.75
 #define LEFT_TRACKING_WHEEL_DISTANCE_FROM_CENTER 3.75
@@ -12,17 +10,19 @@ using namespace pros::c;
 #define STRAFE_TRACKING_WHEEL_DISTANCE_FROM_CENTER 4.75
 #define POWERED_WHEEL_DISTANCE_FROM_CENTER 8.25
 
+extern pros::Motor frontLeft;
+extern pros::Motor frontRight;
+extern pros::Motor backLeft;
+extern pros::Motor backRight;
+
+extern pros::Motor flywheelLeft;
+extern pros::Motor flywheelRight;
+
+extern Chassis base;
+extern Flywheel discShooter;
 
 const int32_t MOTOR_MAX_VOLTAGE = 127;
 const int32_t MOTOR_MIN_VOLTAGE = -127;
-
-const uint8_t FRONTRIGHT = 1;
-const uint8_t BACKRIGHT = 2;
-const uint8_t BACKLEFT = 3;
-const uint8_t FRONTLEFT = 4;
-
-const uint8_t FLYWHEELA = 5;
-const uint8_t FLYWHEELB = 7;
 
 const uint8_t INTAKE = 10;
 
@@ -44,15 +44,9 @@ const uint8_t GPS_RIGHT = 11;
 
 const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CONTROLLER_MASTER;
 
-extern adi_encoder_t right_encoder;
-extern adi_encoder_t left_encoder;
-extern adi_encoder_t strafe_encoder;
-
-extern chassis_t base;
-extern flywheel discShooter;
-
-// odometry task paramaters
-extern tracking_params_t params;
+extern pros::c::adi_encoder_t right_encoder;
+extern pros::c::adi_encoder_t left_encoder;
+extern pros::c::adi_encoder_t strafe_encoder;
 
 //global pose
 extern vector3d_t pose;
