@@ -1,21 +1,32 @@
 #pragma once
 #include "main.h"
 
-typedef struct chassis {
-  uint8_t frontLeftMotor;
-  uint8_t frontRightMotor;
-  uint8_t backLeftMotor;
-  uint8_t backRightMotor;
-} chassis_t;
+class Chassis {
+  public:
+    Chassis(pros::Motor* frontLeftMotor, 
+            pros::Motor* frontRightMotor,
+            pros::Motor* backLeftMotor,
+            pros::Motor* backRightMotor);
 
-int32_t base_move(chassis_t chassis, const int32_t x_voltage, const int32_t y_voltage, const int32_t w_voltage);
+    Chassis(pros::Motor* frontLeftMotor,
+            pros::Motor* frontRightMotor,
+            pros::Motor* backLeftMotor,
+            pros::Motor* backRightMotor,
+            pros::motor_gearset_e_t gearset);
 
-int32_t base_move_velocity(chassis_t chassis, int32_t x_velocity, int32_t y_velocity, int32_t w_velocity);
+    int32_t set_gearing(pros::motor_gearset_e_t gearset);
 
-int32_t base_brake(chassis_t chassis);
+    int32_t set_brake_mode(pros::motor_brake_mode_e_t brakemode);
 
-int32_t base_set_brake_mode(chassis_t chassis, const pros::motor_brake_mode_e_t mode);
+    int32_t move(int32_t x_voltage, int32_t y_voltage, int32_t w_voltage);
 
-int32_t base_set_gearing(chassis_t chassis, const pros::motor_gearset_e gearset);
+    int32_t move_velocity(int32_t x_velocity, int32_t y_velocity, int32_t w_velocity);
 
-int32_t base_set_reversed(chassis_t chassis, const bool reversed);
+    int32_t brake();
+  private:
+    pros::Motor* frontLeftMotor;
+    pros::Motor* frontRightMotor;
+    pros::Motor* backLeftMotor;
+    pros::Motor* backRightMotor;
+    pros::motor_gearset_e_t gearset;
+};
