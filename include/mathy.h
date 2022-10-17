@@ -3,8 +3,8 @@
 
 
 typedef struct vector {
-    int32_t x;
-    int32_t y;
+    double x;
+    double y;
 } vector_t;
 
 //mostly generic but used as x, y, and heading

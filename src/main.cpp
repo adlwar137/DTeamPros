@@ -188,12 +188,70 @@ void competition_initialize() { printf("comp init"); }
  * from where it left off.
  */
 void autonomous() {
+  auton_roller_swap();
 /*
-  PIDController_t WPID = PIDController_create(32, 0, 0);
+  auton_roller_swap();
 
-  while(!(within(pose.w, M_PI, 0.001))) {
+  base_move_velocity(base, 0, -200, 0);
 
-    double WError = mathy_angle_wrap(M_PI - pose.w);
+  delay(250);
+  */
+  double XDesired = -24 * 3.5;
+  double YDesired = -24 * 3.5;
+
+  PIDController_t TranslationPID = PIDController_create(10, 0, 0);
+  PIDController_t XPID = PIDController_create(8, 0, 0);
+  PIDController_t YPID = PIDController_create(8, 0, 0);
+  //PIDController WPID = PIDController_create(4, 0, 0);
+
+  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5))) {
+    
+    double TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
+    double XError = XDesired - pose.x;
+    double YError = YDesired - pose.y;
+
+    vector VelocityVec;
+
+    VelocityVec.x = PIDController_calculate(XPID, XError);
+    VelocityVec.y = PIDController_calculate(YPID, YError);
+
+    mathy_rotate_vector(VelocityVec, pose.w);
+
+    base_move_velocity(base, VelocityVec.x, VelocityVec.y, 0);
+  
+    delay(20);
+  }
+
+  base_brake(base);
+
+  YDesired = -24 * 4.5;
+
+  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5))) {
+    
+    double TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
+    double XError = XDesired - pose.x;
+    double YError = YDesired - pose.y;
+
+    vector VelocityVec;
+
+    VelocityVec.x = PIDController_calculate(XPID, XError);
+    VelocityVec.y = PIDController_calculate(YPID, YError);
+
+    mathy_rotate_vector(VelocityVec, pose.w);
+
+    base_move_velocity(base, VelocityVec.x, VelocityVec.y, 0);
+  
+    delay(20);
+  }
+
+  base_brake(base);
+
+
+  PIDController_t WPID = PIDController_create(64, 0, 0);
+
+  while(!(within(pose.w, -M_PI/2, 0.05))) {
+
+    double WError = mathy_angle_wrap(-M_PI/2 - pose.w);
 
     double WVelocity = PIDController_calculate(WPID, WError);
 
@@ -203,45 +261,9 @@ void autonomous() {
   }
   
   base_brake(base);
-*/
-/*
+
   auton_roller_swap();
 
-  base_move_velocity(base, 0, -200, 0);
-
-  delay(250);
-  */
-  double XDesired = -24 * 2;
-  double YDesired = 24 * 2;
-
-  PIDController_t TranslationPID = PIDController_create(10, 0, 0);
-  //PIDController WPID = PIDController_create(4, 0, 0);
-
-  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5))) {
-    
-    double TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
-    
-    double TranslationalVelocity = PIDController_calculate(TranslationPID, TranslationalError);
-
-    //get the angle in radians of the remaining distance vector
-    double distanceVectorAngle = atan2(YDesired - pose.y, XDesired - pose.x);
-
-    //add the heading to rotate the vector to the global space
-    distanceVectorAngle += pose.w;
-
-    double xVelocity = TranslationalVelocity * sin(distanceVectorAngle);
-    double yVelocity = TranslationalVelocity * cos(distanceVectorAngle);
-
-
-    motor_move_velocity(FRONTLEFT, -yVelocity - xVelocity);
-    motor_move_velocity(BACKLEFT, -yVelocity + xVelocity);
-    motor_move_velocity(BACKRIGHT, -yVelocity - xVelocity);
-    motor_move_velocity(FRONTRIGHT, -yVelocity + xVelocity);
-  
-    delay(20);
-  }
-
-  base_brake(base);
 /*
   base_move_velocity(base, 0, -200, 0);
 
@@ -581,7 +603,7 @@ void opcontrol() {
       mathy_remap(desired_controller_y, -127, 127, -200, 200),
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
     } else {
-
+/*
       double redGoal = atan2(0 - locationSensor_get_pose().x, 0 - locationSensor_get_pose().y);
       double blueGoal = atan2(-48, -48);
 
@@ -595,11 +617,11 @@ void opcontrol() {
       double WVelocity = PIDController_calculate(WPID, WError);
 
       WVelocity = mathy_clamp(WVelocity, -127, 127);
-
+*/
       base_move_velocity(base,
       mathy_remap(-desired_controller_x, -127, 127, -200, 200),
       mathy_remap(-desired_controller_y, -127, 127, -200, 200),
-      mathy_remap(WVelocity, -127, 127, -200, 200));
+      mathy_remap(desired_controller_w, -127, 127, -200, 200));
     }
 
 /*
