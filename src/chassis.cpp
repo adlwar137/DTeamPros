@@ -7,6 +7,8 @@ Chassis::Chassis(pros::Motor* frontLeftMotor, pros::Motor* frontRightMotor, pros
   this->frontRightMotor = frontRightMotor;
   this->backLeftMotor = backLeftMotor;
   this->backRightMotor = backRightMotor;
+  //default to green
+  Chassis::set_gearing(pros::motor_gearset_e_t::E_MOTOR_GEARSET_18);
 }
 
 Chassis::Chassis(pros::Motor* frontLeftMotor, pros::Motor* frontRightMotor, pros::Motor* backLeftMotor, pros::Motor* backRightMotor, pros::motor_gearset_e_t gearset) {
@@ -50,10 +52,50 @@ int32_t Chassis::move_velocity(int32_t x_velocity, int32_t y_velocity, int32_t w
   return 0;
 }
 
+//takes -1 to 1 values on all params
+int32_t Chassis::move_vector(double angle, double power, double turn) {
+  double SIN = sin(angle - M_PI/4);
+  double COS = cos(angle - M_PI/4);
+  double max = mathy_max(fabs(SIN), fabs(COS));
+
+  double frontLeftVelocity = power * COS/max + turn;
+  double frontRightVelocity = power * SIN/max - turn;
+  double backLeftVelocity = power * SIN/max + turn;
+  double backRightVelocity = power * COS/max - turn;
+
+  if((power + fabs(turn)) > 1) {
+    frontLeftVelocity /= power + turn;
+    frontRightVelocity /= power + turn;
+    backLeftVelocity /= power + turn;
+    backRightVelocity /= power + turn;
+  }
+
+  this->frontLeftMotor->move_velocity(frontLeftVelocity * Chassis::get_max_speed());
+  this->frontRightMotor->move_velocity(frontRightVelocity * Chassis::get_max_speed());
+  this->backLeftMotor->move_velocity(backLeftVelocity * Chassis::get_max_speed());
+  this->backRightMotor->move_velocity(backRightVelocity * Chassis::get_max_speed());
+  return 0;
+}
+
 int32_t Chassis::brake() {
   this->frontLeftMotor->brake();
   this->frontRightMotor->brake();
   this->backLeftMotor->brake();
   this->backRightMotor->brake();
+  return 0;
+}
+
+int32_t Chassis::get_max_speed() {
+  switch (this->gearset) {
+    case pros::E_MOTOR_GEARSET_06:
+      return 600;
+    break;
+    case pros::E_MOTOR_GEARSET_18:
+      return 200;
+    break;
+    case pros::E_MOTOR_GEARSET_36:
+      return 100;
+    break;
+  }
   return 0;
 }

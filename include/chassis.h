@@ -1,5 +1,6 @@
 #pragma once
 #include "main.h"
+#include "mathy.h"
 
 class Chassis {
   public:
@@ -22,6 +23,8 @@ class Chassis {
 
     int32_t move_velocity(int32_t x_velocity, int32_t y_velocity, int32_t w_velocity);
 
+    int32_t move_vector(double angle, double power, double turn);
+
     int32_t brake();
   private:
     pros::Motor* frontLeftMotor;
@@ -29,4 +32,6 @@ class Chassis {
     pros::Motor* backLeftMotor;
     pros::Motor* backRightMotor;
     pros::motor_gearset_e_t gearset;
+
+    int32_t get_max_speed();
 };
