@@ -30,4 +30,8 @@ double mathy_angle_wrap(double angle);
 
 double mathy_clamp(double value, double min, double max);
 
+double mathy_min(double x1, double x2);
+
+double mathy_max (double x1, double x2);
+
 int32_t mathy_remap(int32_t value, int32_t from1, int32_t to1, int32_t from2, int32_t to2);
