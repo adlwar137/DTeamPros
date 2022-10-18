@@ -387,7 +387,7 @@ void autonomous() {
 void opcontrol() {
   printf("opcontrol");
 
-  PIDController_t WPID = PIDController_create(128, 0, 0);
+  PIDController WPID = PIDController(128, 0, 0);
 
   while (1) {
     //printf("GPS heading %f \n", (gps_get_heading(GPS_LEFT) + (gps_get_heading(GPS_RIGHT) - 180)) / 2);
