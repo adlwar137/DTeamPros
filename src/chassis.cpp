@@ -63,7 +63,7 @@ int32_t Chassis::move_vector(double angle, double power, double turn) {
   double backLeftVelocity = power * SIN/max + turn;
   double backRightVelocity = power * COS/max - turn;
 
-  if((power + fabs(turn)) > 1) {
+  if((power + fabs(turn)) < -1) {
     frontLeftVelocity /= power + turn;
     frontRightVelocity /= power + turn;
     backLeftVelocity /= power + turn;
