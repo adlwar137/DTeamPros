@@ -12,10 +12,6 @@
 
 using namespace pros::c;
 
-adi_encoder_t right_encoder;
-adi_encoder_t left_encoder;
-adi_encoder_t strafe_encoder;
-
 tracking_params_t params;
 vector3d pose;
 
@@ -50,11 +46,6 @@ void initialize() {
 
   discShooter.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_BRAKE);
 
-  // Initialize encoders
-  left_encoder = adi_encoder_init(ADI_ENCODER_LEFT_TOP, ADI_ENCODER_LEFT_BOTTOM, false);
-  right_encoder = adi_encoder_init(ADI_ENCODER_RIGHT_TOP, ADI_ENCODER_RIGHT_BOTTOM, false);
-  strafe_encoder = adi_encoder_init(ADI_ENCODER_STRAFE_TOP, ADI_ENCODER_STRAFE_BOTTOM, false);
-
   gps_initialize_full(GPS_LEFT, 0, 0, 0, 0, 0);
   gps_initialize_full(GPS_RIGHT, 0, 0, 180, 0, 0);
 
@@ -62,22 +53,9 @@ void initialize() {
   adi_pin_mode(LED,OUTPUT);
 
   // Reset encoder tick positions
-  adi_encoder_reset(left_encoder);
-  adi_encoder_reset(right_encoder);
-  adi_encoder_reset(strafe_encoder);
-
-  //sd card inserted readout
-  if (usd_is_installed()) {
-    printf("SD card installed :(\n");
-  } else {
-    printf("SD card installed :)\n");
-  }
-
-  //set the parameters of the odometry task
-  params.left_encoder = left_encoder;
-  params.right_encoder = right_encoder;
-  params.strafe_encoder = strafe_encoder;
-  params.pose = &pose;
+  left_encoder.reset();
+  right_encoder.reset();
+  strafe_encoder.reset();
 
   //reset absolute pose
   pose.x = 0;
@@ -387,6 +365,14 @@ void autonomous() {
 void opcontrol() {
   printf("opcontrol");
 
+  pose.x = 0;
+  pose.y = 0;
+  pose.w = 0;
+
+  left_encoder.reset();
+  right_encoder.reset();
+  strafe_encoder.reset();
+
   PIDController WPID = PIDController(128, 0, 0);
 
   while (1) {
@@ -430,9 +416,9 @@ void opcontrol() {
       motor_move(INTAKE, -127);
     }
 
-    double desired_controller_x = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X);
-    double desired_controller_y = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y);
-    double desired_controller_w = controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X);
+    int desired_controller_x = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X);
+    int desired_controller_y = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y);
+    int desired_controller_w = controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X);
 
     double controller_x;
     double controller_y;
