@@ -6,7 +6,6 @@
 #include "mathy.h"
 #include "PIDController.h"
 #include "auton.h"
-#include "locationSensor.h"
 #include "pros/misc.h"
 #include "pros/motors.h"
 
@@ -31,6 +30,10 @@ static bool within(double x, double y, double tolerance) {
  */
 void initialize() {
   printf("Initializing");
+
+  //imu_reset(13);
+
+  //delay(4000);
 
   // Initialize motors
 
@@ -64,48 +67,7 @@ void initialize() {
 
   //create the odometry task to run in the background
   //That sweet sweet absolute position
-  pros::task_t odometry = task_create(odometry_track, (void*)(&params), TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sir William Rowan Hamilton");
-/*
-  lv_obj_t * scr1;
-  scr1 = lv_obj_create(NULL, NULL);
-
-  lv_obj_t * background;
-  background = lv_obj_create(NULL, NULL);
-  lv_obj_set_size(background, 480, 272);
-  lv_obj_set_style(background, &lv_style_scr);
-  lv_obj_align(background, NULL, LV_ALIGN_CENTER, 0, 0);
-  
-
-  lv_obj_t * scr2;
-  scr2 = lv_obj_create(NULL, NULL);
-  lv_obj_set_size(scr2, 480, 272);
-  lv_obj_set_style(scr2, &lv_style_pretty);
-  lv_obj_align(scr2, NULL, LV_ALIGN_CENTER, 0, 0);
-
-  lv_scr_load(scr1);
-
-  lv_obj_t * obj1;
-  obj1 = lv_obj_create(lv_scr_act(), NULL);
-  lv_obj_set_size(obj1, 100, 100);
-  lv_obj_set_style(obj1, &lv_style_plain_color);
-  lv_obj_align(obj1, NULL, LV_ALIGN_CENTER, 0, -60);
-
-  lv_obj_t * robLabel;
-  robLabel = lv_label_create(lv_scr_act(), NULL);
-  lv_label_set_long_mode(robLabel, LV_LABEL_LONG_BREAK);
-  lv_label_set_recolor(robLabel, true);
-  lv_label_set_align(robLabel, LV_LABEL_ALIGN_CENTER);
-  lv_label_set_text(robLabel, "#000000 RobOS");
-
-  lv_obj_set_width(robLabel, 100);
-  lv_obj_align(robLabel, NULL, LV_ALIGN_CENTER, 0, 0);
-
-  lv_obj_t * bar1 = lv_bar_create(lv_scr_act(), NULL);
-  lv_obj_set_size(bar1, 200, 30);
-  lv_obj_align(bar1, NULL, LV_ALIGN_CENTER, 0, 30);
-  lv_bar_set_style(bar1, LV_BAR_STYLE_INDIC, &lv_style_pretty_color);
-  lv_bar_set_value_anim(bar1, 100, 2000);
-  */
+  pros::task_t odometry = task_create(odometry_track, NULL, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sir William Rowan Hamilton");
 }
 
 /**
@@ -113,7 +75,9 @@ void initialize() {
  * the VEX Competition Switch, following either autonomous or opcontrol. When
  * the robot is enabled, this task will exit.
  */
-void disabled() { printf("disabled"); }
+void disabled() {
+  printf("disabled");
+}
 
 /**
  * Runs after initialize(), and before autonomous when connected to the Field
@@ -124,7 +88,9 @@ void disabled() { printf("disabled"); }
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() { printf("comp init"); }
+void competition_initialize() { 
+  printf("comp init"); 
+}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -201,150 +167,6 @@ void autonomous() {
 
 
 
-*/
-
-
-  //move to second roller
-
-  //move in between tiles to the left
-/*
-  XDesired = (-24 * 3) - 12;
-  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5) && within(pose.w, WDesired, 0.1))) {
-    
-    TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
-    WError = mathy_angle_wrap(WDesired - pose.w); //wrap angle to signed smallest distance
-    
-    TranslationalVelocity = PIDController_calculate(TranslationPID, TranslationalError);
-    WVelocity = PIDController_calculate(WPID, WError);
-
-    //get the angle in radians of the remaining distance vector
-    double distanceVectorAngle = atan2(YDesired - pose.y, XDesired - pose.x);
-
-    //add the heading to rotate the vector to the global space
-    distanceVectorAngle += pose.w;
-
-    motor_move_velocity(FRONTLEFT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) + WVelocity);
-    motor_move_velocity(BACKLEFT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) + WVelocity);
-    motor_move_velocity(BACKRIGHT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) - WVelocity);
-    motor_move_velocity(FRONTRIGHT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) - WVelocity);
-  
-    delay(20);
-  }
-  base_brake(base);
-
-  YDesired = 1.5 * 24;
-  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5) && within(pose.w, WDesired, 0.1))) {
-    
-    TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
-    WError = mathy_angle_wrap(WDesired - pose.w); //wrap angle to signed smallest distance
-    
-    TranslationalVelocity = PIDController_calculate(TranslationPID, TranslationalError);
-    WVelocity = PIDController_calculate(WPID, WError);
-
-    //get the angle in radians of the remaining distance vector
-    double distanceVectorAngle = atan2(YDesired - pose.y, XDesired - pose.x);
-
-    //add the heading to rotate the vector to the global space
-    distanceVectorAngle += pose.w;
-
-    motor_move_velocity(FRONTLEFT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) + WVelocity);
-    motor_move_velocity(BACKLEFT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) + WVelocity);
-    motor_move_velocity(BACKRIGHT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) - WVelocity);
-    motor_move_velocity(FRONTRIGHT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) - WVelocity);
-  
-    delay(20);
-  }
-  base_brake(base);
-*/
-/*
-  double TranslationalVelocity, WVelocity;
-  double XDesired = 0, YDesired = 0, WDesired = 0;
-  double TranslationalError, WError;
-
-  PIDController_t TranslationPID = PIDController_create(8, 0, 0);
-  PIDController_t WPID = PIDController_create(0, 0, 0);
-
-  delay(2000);
-
-  pose.x = 0;
-  pose.y = 0;
-  pose.w = 0;
-
-  XDesired= 24*3.5;
-  YDesired= -24*3.5;
-
-  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5) && within(pose.w, WDesired, 0.1))) {
-    
-    TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
-    WError = mathy_angle_wrap(WDesired - pose.w); //wrap angle to signed smallest distance
-    
-    TranslationalVelocity = PIDController_calculate(TranslationPID, TranslationalError);
-    WVelocity = PIDController_calculate(WPID, WError);
-
-    //get the angle in radians of the remaining distance vector
-    double distanceVectorAngle = atan2(YDesired - pose.y, XDesired - pose.x);
-
-    //add the heading to rotate the vector to the global space
-    distanceVectorAngle += pose.w;
-
-    if((TranslationalVelocity + WVelocity) > 200 || (TranslationalVelocity + WVelocity) < -200) {
-      double multi = (double)200/(TranslationalVelocity+WVelocity);
-      TranslationalVelocity = multi*TranslationalVelocity;
-      WVelocity = multi*WVelocity;
-    }
-
-    motor_move_velocity(FRONTLEFT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) + WVelocity);
-    motor_move_velocity(BACKLEFT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) + WVelocity);
-    motor_move_velocity(BACKRIGHT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) - WVelocity);
-    motor_move_velocity(FRONTRIGHT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) - WVelocity);
-  
-    delay(20);
-  }
-  base_brake(base);
-  
-  delay(2000);
-*/
-/*
-  WDesired = M_PI/2;
-
-  while(!(within(pose.x, XDesired, 0.5) && within(pose.y, YDesired, 0.5) && within(pose.w, WDesired, 0.1))) {
-    
-    TranslationalError = mathy_distance_between_points(XDesired, pose.x, YDesired, pose.y);
-    WError = mathy_angle_wrap(WDesired - pose.w); //wrap angle to signed smallest distance
-    
-    TranslationalVelocity = PIDController_calculate(TranslationPID, TranslationalError);
-    WVelocity = PIDController_calculate(WPID, WError);
-
-    //get the angle in radians of the remaining distance vector
-    double distanceVectorAngle = atan2(YDesired - pose.y, XDesired - pose.x);
-
-    //add the heading to rotate the vector to the global space
-    distanceVectorAngle += pose.w;
-
-    if((TranslationalVelocity + WVelocity) > 200 || (TranslationalVelocity + WVelocity) < -200) {
-      double multi = (double)200/(TranslationalVelocity+WVelocity);
-      TranslationalVelocity = multi*TranslationalVelocity;
-      WVelocity = multi*WVelocity;
-    }
-
-    motor_move_velocity(FRONTLEFT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) + WVelocity);
-    motor_move_velocity(BACKLEFT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) + WVelocity);
-    motor_move_velocity(BACKRIGHT, TranslationalVelocity * cos(distanceVectorAngle - (M_PI/2)) - WVelocity);
-    motor_move_velocity(FRONTRIGHT, TranslationalVelocity * cos((3*M_PI/4) - distanceVectorAngle) - WVelocity);
-  
-    delay(20);
-  
-  base_brake(base);
-  }
-*/
-
-/*
-  //score second roller
-  base_move_velocity(base, 0, 200, 0);
-  motor_move(INTAKE, -127);
-  delay(500);
-  motor_brake(INTAKE);
-  base_brake(base);
 */
 
 }
@@ -443,11 +265,18 @@ void opcontrol() {
     double field_based_controller_y = desired_controller_x * sin(pose.w) + desired_controller_y * cos(pose.w);
 
     if(isForward) {
+      base.move_vector(atan2(desired_controller_y, desired_controller_x), hypot(desired_controller_x, desired_controller_y) / (double)127, desired_controller_w/(double)127, false);
+    } else {
+      base.move_vector(atan2(desired_controller_y, desired_controller_x), hypot(desired_controller_x, desired_controller_y) / (double)127, desired_controller_w/(double)127, true);
+    }
+/*
+    if(isForward) {
       base.move_velocity(
       mathy_remap(desired_controller_x, -127, 127, -200, 200),
       mathy_remap(desired_controller_y, -127, 127, -200, 200),
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
     } else {
+      */
 /*
       double redGoal = atan2(0 - locationSensor_get_pose().x, 0 - locationSensor_get_pose().y);
       double blueGoal = atan2(-48, -48);
@@ -463,12 +292,13 @@ void opcontrol() {
 
       WVelocity = mathy_clamp(WVelocity, -127, 127);
 */
+/*
       base.move_velocity(
       mathy_remap(-desired_controller_x, -127, 127, -200, 200),
       mathy_remap(-desired_controller_y, -127, 127, -200, 200),
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
     }
-
+*/
 /*
     base_move_velocity(base,
       mathy_remap(field_based_controller_x, -127, 127, -200, 200),
@@ -476,7 +306,7 @@ void opcontrol() {
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
 */
 
-    //printf("x: %f, Y: %f, W: %f\n", pose.x, pose.y, pose.w);
+    printf("x: %f, Y: %f, W: %f\n", pose.x, pose.y, pose.w);
     //printf("left: %d, right: %d, strafe: %d\n", adi_encoder_get(left_encoder), adi_encoder_get(right_encoder), adi_encoder_get(strafe_encoder));
 
     delay(20);
