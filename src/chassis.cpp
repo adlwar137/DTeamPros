@@ -1,7 +1,5 @@
 #include "chassis.h"
 
-using namespace pros::c;
-
 Chassis::Chassis(pros::Motor* frontLeftMotor, pros::Motor* frontRightMotor, pros::Motor* backLeftMotor, pros::Motor* backRightMotor) {
   this->frontLeftMotor = frontLeftMotor;
   this->frontRightMotor = frontRightMotor;
@@ -53,22 +51,43 @@ int32_t Chassis::move_velocity(int32_t x_velocity, int32_t y_velocity, int32_t w
 }
 
 //takes -1 to 1 values on all params
-int32_t Chassis::move_vector(double angle, double power, double turn) {
+int32_t Chassis::move_vector(double angle, double power, double turn, bool reversed) {
   double SIN = sin(angle - M_PI/4);
   double COS = cos(angle - M_PI/4);
   double max = mathy_max(fabs(SIN), fabs(COS));
 
-  double frontLeftVelocity = power * COS/max + turn;
-  double frontRightVelocity = power * SIN/max - turn;
-  double backLeftVelocity = power * SIN/max + turn;
-  double backRightVelocity = power * COS/max - turn;
+  double frontLeftVelocity;
+  double frontRightVelocity;
+  double backLeftVelocity;
+  double backRightVelocity;
 
-  if((power + fabs(turn)) < -1) {
-    frontLeftVelocity /= power + turn;
-    frontRightVelocity /= power + turn;
-    backLeftVelocity /= power + turn;
-    backRightVelocity /= power + turn;
+  if(reversed) {
+    frontLeftVelocity = -power * COS/max + turn;
+    frontRightVelocity = -power * SIN/max - turn;
+    backLeftVelocity = -power * SIN/max + turn;
+    backRightVelocity = -power * COS/max - turn;
+
+    if((power + fabs(turn)) < -1) {
+      frontLeftVelocity /= -power + turn;
+      frontRightVelocity /= -power + turn;
+      backLeftVelocity /= -power + turn;
+      backRightVelocity /= -power + turn;
+    }
+  } else {
+    frontLeftVelocity = power * COS/max + turn;
+    frontRightVelocity = power * SIN/max - turn;
+    backLeftVelocity = power * SIN/max + turn;
+    backRightVelocity = power * COS/max - turn;
+
+    if((power + fabs(turn)) < -1) {
+      frontLeftVelocity /= power + turn;
+      frontRightVelocity /= power + turn;
+      backLeftVelocity /= power + turn;
+      backRightVelocity /= power + turn;
+    }
   }
+
+
 
   this->frontLeftMotor->move_velocity(frontLeftVelocity * Chassis::get_max_speed());
   this->frontRightMotor->move_velocity(frontRightVelocity * Chassis::get_max_speed());

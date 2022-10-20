@@ -23,7 +23,7 @@ class Chassis {
 
     int32_t move_velocity(int32_t x_velocity, int32_t y_velocity, int32_t w_velocity);
 
-    int32_t move_vector(double angle, double power, double turn);
+    int32_t move_vector(double angle, double power, double turn, bool reversed);
 
     int32_t brake();
   private:
