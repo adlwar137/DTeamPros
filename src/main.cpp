@@ -1,5 +1,4 @@
 #include "main.h"
-#include "odometry.h"
 #include "config.h"
 #include "chassis.h"
 #include "flywheel.h"
@@ -8,10 +7,10 @@
 #include "auton.h"
 #include "pros/misc.h"
 #include "pros/motors.h"
+#include "constants.h"
 
 using namespace pros::c;
 
-tracking_params_t params;
 vector3d pose;
 
 // declare subsystems here
@@ -31,8 +30,12 @@ static bool within(double x, double y, double tolerance) {
 void initialize() {
   printf("Initializing");
 
-  //imu_reset(13);
-
+  inertial.reset();
+  /*
+  while(inertial.is_calibrating()) {
+    delay(200);
+  }
+  */
   //delay(4000);
 
   // Initialize motors
@@ -67,7 +70,9 @@ void initialize() {
 
   //create the odometry task to run in the background
   //That sweet sweet absolute position
-  pros::task_t odometry = task_create(odometry_track, NULL, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sir William Rowan Hamilton");
+
+  
+  //pros::task_t odometry_task = task_create(odometry.trackPosition(20, &pose.w), NULL, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sir William Rowan Hamilton");
 }
 
 /**
@@ -187,20 +192,20 @@ void autonomous() {
 void opcontrol() {
   printf("opcontrol");
 
-  pose.x = 0;
-  pose.y = 0;
-  pose.w = 0;
-
   left_encoder.reset();
   right_encoder.reset();
   strafe_encoder.reset();
 
-  PIDController WPID = PIDController(128, 0, 0);
+  odometry.reset();
+
+  PIDController WPID = PIDController(64, 0, 0);
 
   while (1) {
     //printf("GPS heading %f \n", (gps_get_heading(GPS_LEFT) + (gps_get_heading(GPS_RIGHT) - 180)) / 2);
 
     //printf("GPS xPosition: %f, GPS yPosition: %f, GPS heading: %f\n", locationSensor_get_pose().x, locationSensor_get_pose().y, locationSensor_get_pose().w);
+
+    //odometry.updatePosition(mathy_angle_wrap(mathy_to_radians(inertial.get_heading())));
 
     if(controller_get_digital(MASTER_CONTROLLER, DIGITAL_B) == 1) {
       motor_move(PUNCHER, 127);
@@ -242,33 +247,18 @@ void opcontrol() {
     int desired_controller_y = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y);
     int desired_controller_w = controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X);
 
-    double controller_x;
-    double controller_y;
-    double controller_w;
+    double field_based_controller_x = desired_controller_x * cos(odometry.getHeading()) - desired_controller_y * sin(odometry.getHeading());
+    double field_based_controller_y = desired_controller_x * sin(odometry.getHeading()) + desired_controller_y * cos(odometry.getHeading());
 
-    double translation_gradient = 0.1;
-    double rotation_gradient = 0.2;
-
-    //might cause issues with exact values due to imprecise doubles
-    controller_x += (desired_controller_x - controller_x) * translation_gradient;
-    controller_y += (desired_controller_y - controller_y) * translation_gradient;
-    controller_w += (desired_controller_w - controller_w) * rotation_gradient;
-
-    if(desired_controller_x < 0.000001 && desired_controller_x > -0.000001) {
-      controller_x = 0;
-    }
-    if(desired_controller_y < 0.000001 && desired_controller_y > -0.000001) {
-      controller_y = 0;
-    }
-
-    double field_based_controller_x = desired_controller_x * cos(pose.w) - desired_controller_y * sin(pose.w);
-    double field_based_controller_y = desired_controller_x * sin(pose.w) + desired_controller_y * cos(pose.w);
+    //field centric
+    //base.move_vector(atan2(field_based_controller_y, field_based_controller_x), hypot(field_based_controller_x, field_based_controller_y) / (double)127, desired_controller_w/(double)127, false);
 
     if(isForward) {
       base.move_vector(atan2(desired_controller_y, desired_controller_x), hypot(desired_controller_x, desired_controller_y) / (double)127, desired_controller_w/(double)127, false);
     } else {
-      base.move_vector(atan2(desired_controller_y, desired_controller_x), hypot(desired_controller_x, desired_controller_y) / (double)127, desired_controller_w/(double)127, true);
+      base.move_vector(atan2(desired_controller_y, desired_controller_x), hypot(desired_controller_x, desired_controller_y) / (double)127, desired_controller_w/(double)127/2, true);
     }
+
 /*
     if(isForward) {
       base.move_velocity(
@@ -276,27 +266,27 @@ void opcontrol() {
       mathy_remap(desired_controller_y, -127, 127, -200, 200),
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
     } else {
-      */
-/*
-      double redGoal = atan2(0 - locationSensor_get_pose().x, 0 - locationSensor_get_pose().y);
+      
+
+      double redGoal = atan2(0 - odometry.getPosition().x, 0 - odometry.getPosition().y);
       double blueGoal = atan2(-48, -48);
 
       double WDesired = mathy_angle_wrap(redGoal);
 
       //printf("heading: %f\n", WDesired);
-      printf("atan test: %f\n", mathy_to_degrees(atan2(48 - locationSensor_get_pose().x,48 - locationSensor_get_pose().y) - pose.w));
+      printf("atan test: %f\n", mathy_to_degrees(atan2(48 - odometry.getPosition().x,48 - odometry.getPosition().y) - odometry.getStatus().w));
 
-      double WError = mathy_angle_wrap(atan2(48 - locationSensor_get_pose().x,48 - locationSensor_get_pose().y) - pose.w);
+      double WError = mathy_angle_wrap(atan2(48 - odometry.getPosition().x,48 - odometry.getPosition().y) - odometry.getStatus().w);
 
-      double WVelocity = PIDController_calculate(WPID, WError);
+      double WVelocity = WPID.calculate(WError);
 
       WVelocity = mathy_clamp(WVelocity, -127, 127);
-*/
-/*
+
+
       base.move_velocity(
       mathy_remap(-desired_controller_x, -127, 127, -200, 200),
       mathy_remap(-desired_controller_y, -127, 127, -200, 200),
-      mathy_remap(desired_controller_w, -127, 127, -200, 200));
+      mathy_remap(WVelocity, -127, 127, -200, 200));
     }
 */
 /*
@@ -306,7 +296,7 @@ void opcontrol() {
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
 */
 
-    printf("x: %f, Y: %f, W: %f\n", pose.x, pose.y, pose.w);
+    printf("x: %f, Y: %f, W: %f\n", odometry.getStatus().x, odometry.getStatus().y, odometry.getStatus().w);
     //printf("left: %d, right: %d, strafe: %d\n", adi_encoder_get(left_encoder), adi_encoder_get(right_encoder), adi_encoder_get(strafe_encoder));
 
     delay(20);
