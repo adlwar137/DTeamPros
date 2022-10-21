@@ -1,6 +1,6 @@
 #pragma once
 #include "main.h"
-#include "odometry.h"
+#include "odometrySensor.h"
 #include "flywheel.h"
 #include "chassis.h"
 
@@ -24,20 +24,7 @@ extern pros::ADIEncoder strafe_encoder;
 
 extern Chassis base;
 extern Flywheel discShooter;
-
-const int32_t MOTOR_MAX_VOLTAGE = 127;
-const int32_t MOTOR_MIN_VOLTAGE = -127;
-
-const uint8_t INTAKE = 10;
-
-const uint8_t PUNCHER = 9;
-
-const uint8_t LED = 8;
-
-const uint8_t GPS_LEFT = 12;
-const uint8_t GPS_RIGHT = 11;
-
-const pros::controller_id_e_t MASTER_CONTROLLER = pros::controller_id_e_t::E_CONTROLLER_MASTER;
+extern OdometrySensor odometry;
 
 //global pose
 extern vector3d_t pose;
