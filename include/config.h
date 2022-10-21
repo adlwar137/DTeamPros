@@ -4,12 +4,6 @@
 #include "flywheel.h"
 #include "chassis.h"
 
-#define TRACKING_WHEEL_DIAMETER 2.75
-#define LEFT_TRACKING_WHEEL_DISTANCE_FROM_CENTER 4
-#define RIGHT_TRACKING_WHEEL_DISTANCE_FROM_CENTER 4
-#define STRAFE_TRACKING_WHEEL_DISTANCE_FROM_CENTER 4.75
-#define POWERED_WHEEL_DISTANCE_FROM_CENTER 8.25
-
 extern pros::Motor frontLeft;
 extern pros::Motor frontRight;
 extern pros::Motor backLeft;
@@ -21,6 +15,8 @@ extern pros::Motor flywheelRight;
 extern pros::ADIEncoder right_encoder;
 extern pros::ADIEncoder left_encoder;
 extern pros::ADIEncoder strafe_encoder;
+
+extern pros::Imu inertial;
 
 extern Chassis base;
 extern Flywheel discShooter;
