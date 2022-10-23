@@ -21,6 +21,13 @@ static bool within(double x, double y, double tolerance) {
   return fabs(y - x) < tolerance;
 }
 
+void odometry_run(void* param) {
+  while(1) {
+    odometry.updatePosition(mathy_angle_wrap(mathy_to_radians(inertial.get_heading())));
+    pros::delay(20);
+  }
+}
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -31,11 +38,11 @@ void initialize() {
   printf("Initializing");
 
   inertial.reset();
-  /*
+  
   while(inertial.is_calibrating()) {
     delay(200);
   }
-  */
+  
   //delay(4000);
 
   // Initialize motors
@@ -70,9 +77,7 @@ void initialize() {
 
   //create the odometry task to run in the background
   //That sweet sweet absolute position
-
-  
-  //pros::task_t odometry_task = task_create(odometry.trackPosition(20, &pose.w), NULL, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sir William Rowan Hamilton");
+  pros::Task odometry_task = pros::Task(odometry_run, NULL, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sir William Rowan Hamilton");
 }
 
 /**
@@ -112,68 +117,64 @@ void autonomous() {
 
    //score first roller
    /*
-  base_move_velocity(base, 0, 200, 0);
+   base.move_vector(M_PI/2, 1, 0, false);
+   delay(500);
+   base.brake();
+   */
+/*
+  base.move_vector(0, 1, 0, false);
   motor_move(INTAKE, -127);
   delay(500);
   motor_brake(INTAKE);
-  base_brake(base);
+  base.brake();
   */
   /*
-  base_set_brake_mode(base, MOTOR_BRAKE_BRAKE);
+  base.move_velocity(0, 200, 0);
+  motor_move(INTAKE, -127);
+  delay(500);
+  motor_brake(INTAKE);
+  base.brake();
+  */
+
+  //base.set_brake_mode(MOTOR_BRAKE_BRAKE);
 
   double TranslationalVelocity, WVelocity;
-  double XDesired = 0, YDesired = 0, WDesired = -M_PI/2;
+  double XDesired = 0, YDesired = -24, WDesired = -M_PI/2;
   double TranslationalError, WError;
 
-  PIDController_t TranslationPID = PIDController_create(8, 0, 0);
-  PIDController_t WPID = PIDController_create(64, 0, 0);
+  PIDController TranslationPID = PIDController(4, 0, 0);
+  PIDController WPID = PIDController(64, 0, 0);
 
-  delay(2000);
+  while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
+    double power = TranslationPID.calculate(
+      hypot(YDesired - odometry.getPosition().y, XDesired - odometry.getPosition().x)
+    );
+    printf("angle: %f, power: %f\n",atan2(YDesired - odometry.getPosition().y, XDesired - odometry.getPosition().x), power);
+    pros::delay(20);
+  }
+  base.brake();
 
- 
+/*
+   while(!(within(odometry.getHeading(), WDesired, 0.05))) {
 
-  pose.x = 0;
-  pose.y = 0;
-  pose.w = 0;
-
- 
-  base_brake(base);
-
-  double field_based_controller_x = -200 * cos(pose.w) - (-200) * sin(pose.w);
-  double field_based_controller_y = -200 * sin(pose.w) + (-200) * cos(pose.w);
-
-  base_move_velocity(base, field_based_controller_x, field_based_controller_y, 0);
-
-  delay(3500);
-
-  base_brake(base);
-
-  delay(300);
-
-   while(!(within(pose.w, WDesired, 0.05))) {
-
-
-    base_move_velocity(base, 0, 0, WVelocity);
+    base.move_velocity(0, 0, WVelocity);
 
     delay(20);
   }
 
-  base_brake(base);
-
+  base.brake();
+*/
+/*
   delay(300);
 
-  base_move_velocity(base, 0, 200, 0);
+  base.move_velocity(0, 200, 0);
   motor_move(INTAKE, -127);
   delay(2000);
   motor_brake(INTAKE);
-  base_brake(base);
+  base.brake();
 
-  base_set_brake_mode(base, MOTOR_BRAKE_COAST);
-
-
-
+  base.set_brake_mode(MOTOR_BRAKE_COAST);
 */
-
 }
 
 /**
@@ -268,7 +269,7 @@ void opcontrol() {
     } else {
       
 
-      double redGoal = atan2(0 - odometry.getPosition().x, 0 - odometry.getPosition().y);
+      double redGoal = atan2(48 - odometry.getPosition().x, 48 - odometry.getPosition().y);
       double blueGoal = atan2(-48, -48);
 
       double WDesired = mathy_angle_wrap(redGoal);
