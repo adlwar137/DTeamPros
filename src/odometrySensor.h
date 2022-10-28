@@ -19,9 +19,9 @@ class OdometrySensor {
         //takes in a double pointer for a heading
         int32_t trackPosition(int32_t interval, double* heading);
 
-        vector_t getPosition();
+        Vector getPosition();
         double getHeading();
-        vector3d_t getStatus();
+        Vector getStatus();
 
         void reset();
     private:
@@ -29,7 +29,7 @@ class OdometrySensor {
         pros::ADIEncoder* right_encoder;
         pros::ADIEncoder* strafe_encoder;
 
-        vector3d_t pose;
+        Vector pose;
 
         double getEncoderDistance(pros::ADIEncoder* encoder, double wheelDiameter);
 };

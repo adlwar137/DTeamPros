@@ -8,7 +8,7 @@ class GpsArray {
         GpsArray();
         void addGps(pros::Gps* sensor);
 
-        vector3d_t get_pose();
+        Vector get_pose();
     private:
         std::vector<pros::Gps*> gpsSensors;
 };

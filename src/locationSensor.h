@@ -21,5 +21,5 @@ class LocationSensor {
     private:
         GpsArray* gpsArray;
         pros::Imu* inertial;
-        vector3d_t pose;
+        Vector pose;
 };

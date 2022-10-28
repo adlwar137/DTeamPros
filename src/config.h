@@ -19,8 +19,5 @@ extern pros::ADIEncoder strafe_encoder;
 extern pros::Imu inertial;
 
 extern Chassis base;
-extern Flywheel discShooter;
+extern Flywheel flywheel;
 extern OdometrySensor odometry;
-
-//global pose
-extern vector3d_t pose;
