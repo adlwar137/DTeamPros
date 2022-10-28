@@ -57,7 +57,7 @@ void initialize() {
   // Set brake modes
   base.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_COAST);
 
-  discShooter.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_BRAKE);
+  flywheel.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_BRAKE);
 
   gps_initialize_full(GPS_LEFT, 0, 0, 0, 0, 0);
   gps_initialize_full(GPS_RIGHT, 0, 0, 180, 0, 0);
@@ -219,15 +219,15 @@ void opcontrol() {
     }
 
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_L1)) {
-      discShooter.spin(127);
+      flywheel.spin(127);
     }
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_L2)) {
-      discShooter.brake();
+      flywheel.brake();
     }
 
     //printf("flywheelASpeed: %f, flywheelATemp: %f, flywheelBSpeed: %f, flywheelBTemp: %f\n", motor_get_actual_velocity(FLYWHEELA), motor_get_temperature(FLYWHEELA), motor_get_actual_velocity(FLYWHEELB), motor_get_temperature(FLYWHEELB));
 
-    if(discShooter.get_actual_average_velocity() > 450 ) {
+    if(flywheel.get_actual_average_velocity() > 450 ) {
       adi_digital_write(LED, false);
       controller_rumble(MASTER_CONTROLLER, "-");
     } else {

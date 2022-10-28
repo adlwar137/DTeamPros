@@ -17,6 +17,6 @@ pros::Imu inertial = pros::Imu(13);
 
 Chassis base = Chassis(&frontLeft, &frontRight, &backLeft, &backRight, pros::E_MOTOR_GEARSET_18);
 
-Flywheel discShooter = Flywheel(&flywheelLeft, &flywheelRight, pros::motor_gearset_e_t::E_MOTOR_GEARSET_06);
+Flywheel flywheel = Flywheel(&flywheelLeft, &flywheelRight, pros::motor_gearset_e_t::E_MOTOR_GEARSET_06);
 
 OdometrySensor odometry = OdometrySensor(&left_encoder, &right_encoder, &strafe_encoder);
