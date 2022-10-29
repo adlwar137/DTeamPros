@@ -49,7 +49,7 @@ void OdometrySensor::updatePosition() {
 
   this->pose.x = GlobalXPosition;
   this->pose.y = GlobalYPosition;
-  this->pose.w = heading;
+  this->pose.heading = heading;
 }
 
 void OdometrySensor::updatePosition(double heading) {
@@ -94,7 +94,7 @@ void OdometrySensor::updatePosition(double heading) {
 
   this->pose.x = GlobalXPosition;
   this->pose.y = GlobalYPosition;
-  this->pose.w = heading;
+  this->pose.heading = heading;
 }
 
 int32_t OdometrySensor::trackPosition(int32_t interval) {
@@ -111,29 +111,29 @@ int32_t OdometrySensor::trackPosition(int32_t interval, double* heading) {
   }
 }
 
-vector_t OdometrySensor::getPosition() {
-  vector_t pos;
+Vector OdometrySensor::getPosition() {
+  Vector pos;
   pos.x = this->pose.x;
   pos.y = this->pose.y;
   return pos;
 }
 
 double OdometrySensor::getHeading() {
-  return this->pose.w;
+  return this->pose.heading;
 }
 
-vector3d_t OdometrySensor::getStatus() {
-  vector3d_t pos;
+Vector OdometrySensor::getStatus() {
+  Vector pos;
   pos.x = this->pose.x;
   pos.y = this->pose.y;
-  pos.w = this->pose.w;
+  pos.heading = this->pose.heading;
   return pos;
 }
 
 void OdometrySensor::reset() {
   this->pose.x = 0;
   this->pose.y = 0;
-  this->pose.w = 0;
+  this->pose.heading = 0;
 }
 
 double OdometrySensor::getEncoderDistance(pros::ADIEncoder* encoder, double wheelDiameter) {
