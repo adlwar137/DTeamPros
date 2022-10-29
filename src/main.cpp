@@ -108,6 +108,14 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
+// long one roller start
+  base.move_velocity(0, 200, 0);
+  motor_move(INTAKE, -127);
+  delay(500);
+  motor_brake(INTAKE);
+  base.brake();
+// long one roller end
+
 /*
   //short one roller start
   base.set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
@@ -257,6 +265,7 @@ void autonomous() {
   //two roller end
 */
 
+/*
   //skills start
   base.set_brake_mode(MOTOR_BRAKE_BRAKE);
 
@@ -414,6 +423,9 @@ void autonomous() {
   pros::delay(3000);
   motor_brake(INTAKE);
   base.brake();
+  //skills end
+*/
+
 }
 
 /**
