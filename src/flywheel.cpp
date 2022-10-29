@@ -35,6 +35,12 @@ int32_t Flywheel::spin(int32_t voltage) {
     return 0;
 }
 
+int32_t Flywheel::spin_velocity(int32_t velocity) {
+    this->leftMotor->move_velocity(velocity);
+    this->rightMotor->move_velocity(velocity);
+    return 0;
+}
+
 int32_t Flywheel::brake() {
     this->leftMotor->brake();
     this->rightMotor->brake();

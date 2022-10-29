@@ -11,8 +11,6 @@
 
 using namespace pros::c;
 
-vector3d pose;
-
 // declare subsystems here
 bool isForward = true;
 
@@ -23,7 +21,7 @@ static bool within(double x, double y, double tolerance) {
 
 void odometry_run(void* param) {
   while(1) {
-    odometry.updatePosition(mathy_angle_wrap(mathy_to_radians(inertial.get_heading())));
+    odometry.updatePosition(mathy_angle_wrap(mathy_to_radians<double>(inertial.get_heading())));
     pros::delay(20);
   }
 }
@@ -42,7 +40,7 @@ void initialize() {
   while(inertial.is_calibrating()) {
     delay(200);
   }
-  
+
   //delay(4000);
 
   // Initialize motors
@@ -69,11 +67,6 @@ void initialize() {
   left_encoder.reset();
   right_encoder.reset();
   strafe_encoder.reset();
-
-  //reset absolute pose
-  pose.x = 0;
-  pose.y = 0;
-  pose.w = 0;
 
   //create the odometry task to run in the background
   //That sweet sweet absolute position
@@ -114,67 +107,312 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
-
-   //score first roller
-   /*
-   base.move_vector(M_PI/2, 1, 0, false);
-   delay(500);
-   base.brake();
-   */
 /*
-  base.move_vector(0, 1, 0, false);
-  motor_move(INTAKE, -127);
-  delay(500);
-  motor_brake(INTAKE);
-  base.brake();
-  */
-  /*
-  base.move_velocity(0, 200, 0);
-  motor_move(INTAKE, -127);
-  delay(500);
-  motor_brake(INTAKE);
-  base.brake();
-  */
-
-  //base.set_brake_mode(MOTOR_BRAKE_BRAKE);
+  //short one roller start
+  base.set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
 
   double TranslationalVelocity, WVelocity;
-  double XDesired = 0, YDesired = -24, WDesired = -M_PI/2;
+  double XDesired = -1 * 24, YDesired = 0, WDesired = 0;
   double TranslationalError, WError;
 
-  PIDController TranslationPID = PIDController(4, 0, 0);
-  PIDController WPID = PIDController(64, 0, 0);
+  PIDController TranslationPID = PIDController(0.05, 0, 0);
+  PIDController WPID = PIDController(1, 0, 0);
 
   while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
-    double power = TranslationPID.calculate(
-      hypot(YDesired - odometry.getPosition().y, XDesired - odometry.getPosition().x)
-    );
-    printf("angle: %f, power: %f\n",atan2(YDesired - odometry.getPosition().y, XDesired - odometry.getPosition().x), power);
+    Vector difference = Vector();
+    difference.x = XDesired - odometry.getPosition().x;
+    difference.y = YDesired - odometry.getPosition().y;
+    //rotate the vector by heading to make turn resistant
+    //disable if breaks
+    //difference.rotate(odometry.getHeading());
+
+    double TranslationalPower = TranslationPID.calculate(difference.magnitude());
+    double RotationalPower = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+    printf("angle: %f, power: %f\n", difference.angle(), TranslationalPower);
+    base.move_vector(difference.angle(), TranslationalPower, 0, false);
     pros::delay(20);
   }
+
   base.brake();
 
-/*
    while(!(within(odometry.getHeading(), WDesired, 0.05))) {
 
-    base.move_velocity(0, 0, WVelocity);
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
 
-    delay(20);
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
   }
 
   base.brake();
-*/
-/*
-  delay(300);
 
-  base.move_velocity(0, 200, 0);
+  base.move_velocity(0, 100, 0);
   motor_move(INTAKE, -127);
-  delay(2000);
+  delay(1500);
   motor_brake(INTAKE);
   base.brake();
 
-  base.set_brake_mode(MOTOR_BRAKE_COAST);
+  //short one roller end
 */
+
+/*
+  //long one roller start
+  base.set_brake_mode(pros::motor_brake_mode_e::E_MOTOR_BRAKE_BRAKE);
+
+  double TranslationalVelocity, WVelocity;
+  double XDesired = 1 * 24, YDesired = 0, WDesired = 0;
+  double TranslationalError, WError;
+
+  PIDController TranslationPID = PIDController(0.05, 0, 0);
+  PIDController WPID = PIDController(1, 0, 0);
+
+  while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
+    Vector difference = Vector();
+    difference.x = XDesired - odometry.getPosition().x;
+    difference.y = YDesired - odometry.getPosition().y;
+    //rotate the vector by heading to make turn resistant
+    //disable if breaks
+    //difference.rotate(odometry.getHeading());
+
+    double TranslationalPower = TranslationPID.calculate(difference.magnitude());
+    double RotationalPower = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+    printf("angle: %f, power: %f\n", difference.angle(), TranslationalPower);
+    base.move_vector(difference.angle(), TranslationalPower, 0, false);
+    pros::delay(20);
+  }
+
+  base.brake();
+
+   while(!(within(odometry.getHeading(), WDesired, 0.05))) {
+
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
+  }
+
+  base.brake();
+
+  base.move_velocity(0, 100, 0);
+  motor_move(INTAKE, -127);
+  delay(1500);
+  motor_brake(INTAKE);
+  base.brake();
+
+  //long one roller end
+*/
+
+/*
+  //two roller start
+  base.set_brake_mode(MOTOR_BRAKE_BRAKE);
+
+  base.move_velocity(0, 200, 0);
+  motor_move(INTAKE, -127);
+  delay(500);
+  motor_brake(INTAKE);
+  base.brake();
+
+  double TranslationalVelocity, WVelocity;
+  double XDesired = -24*3.5, YDesired = -24*3.5, WDesired = -M_PI/2;
+  double TranslationalError, WError;
+
+  PIDController TranslationPID = PIDController(0.05, 0, 0);
+  PIDController WPID = PIDController(1, 0, 0);
+
+  while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
+    Vector difference = Vector();
+    difference.x = XDesired - odometry.getPosition().x;
+    difference.y = YDesired - odometry.getPosition().y;
+    //rotate the vector by heading to make turn resistant
+    //disable if breaks
+    //difference.rotate(odometry.getHeading());
+
+    double TranslationalPower = TranslationPID.calculate(difference.magnitude());
+    double RotationalPower = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+    printf("angle: %f, power: %f\n", difference.angle(), TranslationalPower);
+    base.move_vector(difference.angle(), TranslationalPower, 0, false);
+    pros::delay(20);
+  }
+
+  while(!(within(odometry.getHeading(), WDesired, 0.05))) {
+
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
+  }
+
+  base.brake();
+
+  delay(1000);
+
+  base.move_vector(0.75* M_PI, 1, 0, false);
+  motor_move(INTAKE, -127);
+  delay(1000);
+  motor_brake(INTAKE);
+  base.brake();
+  //two roller end
+*/
+
+  //skills start
+  base.set_brake_mode(MOTOR_BRAKE_BRAKE);
+
+  base.move_velocity(0, 25, 0);
+  motor_move(INTAKE, -127);
+  pros::delay(1000);
+  motor_brake(INTAKE);
+  base.brake();
+
+  double TranslationalVelocity, WVelocity;
+  double XDesired = 12, YDesired = -24, WDesired = M_PI/2;
+  double TranslationalError, WError;
+
+  PIDController TranslationPID = PIDController(0.04, 0, 0);
+  PIDController WPID = PIDController(1, 0, 0);
+
+  while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
+    Vector difference = Vector();
+    difference.x = XDesired - odometry.getPosition().x;
+    difference.y = YDesired - odometry.getPosition().y;
+    //rotate the vector by heading to make turn resistant
+    //disable if breaks
+    //difference.rotate(odometry.getHeading());
+
+    double TranslationalPower = TranslationPID.calculate(difference.magnitude());
+    double RotationalPower = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+    printf("angle: %f, power: %f\n", difference.angle(), TranslationalPower);
+    base.move_vector(difference.angle(), TranslationalPower, 0, false);
+    pros::delay(20);
+  }
+
+  while(!(within(odometry.getHeading(), WDesired, 0.05))) {
+
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
+  }
+
+  base.brake();
+
+  pros::delay(500);
+
+  base.move_velocity(0, 25, 0);
+  motor_move(INTAKE, -127);
+  pros::delay(2500);
+  motor_brake(INTAKE);
+  base.brake();
+
+  XDesired = -4*24;
+  YDesired = -3.8*24;
+  WDesired = 0;
+  
+  pros::delay(1000);
+
+  while(!(within(odometry.getHeading(), WDesired, 0.05))) {
+
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
+  }
+
+  base.brake();
+  pros::delay(1000);
+
+  while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
+    Vector difference = Vector();
+    difference.x = XDesired - odometry.getPosition().x;
+    difference.y = YDesired - odometry.getPosition().y;
+    //rotate the vector by heading to make turn resistant
+    //disable if breaks
+    //difference.rotate(odometry.getHeading());
+
+    double TranslationalPower = TranslationPID.calculate(difference.magnitude());
+    //double RotationalPower = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+    printf("angle: %f, power: %f\n", difference.angle(), TranslationalPower);
+    base.move_vector(difference.angle() + odometry.getHeading(), TranslationalPower, 0, false);
+    pros::delay(20);
+  }
+
+  base.brake();
+  pros::delay(500);
+
+  WDesired = -M_PI/2;
+
+  while(!(within(odometry.getHeading(), WDesired, 0.05))) {
+
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
+  }
+  
+  base.brake();
+
+  base.move_velocity(0, 25, 0);
+  motor_move(INTAKE, -127);
+  pros::delay(3000);
+  motor_brake(INTAKE);
+  base.brake();
+
+  WDesired = 0;
+
+    while(!(within(odometry.getHeading(), WDesired, 0.05))) {
+
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
+  }
+
+  base.brake();
+
+  XDesired = -3.5*24;
+  YDesired = -3.5*24;
+
+  while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
+    Vector difference = Vector();
+    difference.x = XDesired - odometry.getPosition().x;
+    difference.y = YDesired - odometry.getPosition().y;
+    //rotate the vector by heading to make turn resistant
+    //disable if breaks
+    //difference.rotate(odometry.getHeading());
+
+    double TranslationalPower = TranslationPID.calculate(difference.magnitude());
+    //double RotationalPower = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+    printf("angle: %f, power: %f\n", difference.angle(), TranslationalPower);
+    base.move_vector(difference.angle() + odometry.getHeading(), TranslationalPower, 0, false);
+    pros::delay(20);
+  }
+
+  base.brake();
+  pros::delay(500);
+
+  WDesired = M_PI;
+
+  while(!(within(odometry.getHeading(), WDesired, 0.05))) {
+
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
+  }
+
+  base.brake();
+
+  base.move_velocity(0, 25, 0);
+  motor_move(INTAKE, -127);
+  pros::delay(3000);
+  motor_brake(INTAKE);
+  base.brake();
 }
 
 /**
@@ -297,7 +535,7 @@ void opcontrol() {
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
 */
 
-    printf("x: %f, Y: %f, W: %f\n", odometry.getStatus().x, odometry.getStatus().y, odometry.getStatus().w);
+    printf("x: %f, Y: %f, W: %f\n", odometry.getStatus().x, odometry.getStatus().y, odometry.getStatus().heading);
     //printf("left: %d, right: %d, strafe: %d\n", adi_encoder_get(left_encoder), adi_encoder_get(right_encoder), adi_encoder_get(strafe_encoder));
 
     delay(20);
