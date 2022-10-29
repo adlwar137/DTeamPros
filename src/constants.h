@@ -14,6 +14,8 @@ const uint8_t INTAKE = 10;
 
 const uint8_t PUNCHER = 9;
 
+const uint8_t PISTON = 7;
+
 const uint8_t LED = 8;
 
 const uint8_t GPS_LEFT = 12;

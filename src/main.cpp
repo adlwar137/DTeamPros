@@ -61,7 +61,8 @@ void initialize() {
   gps_initialize_full(GPS_RIGHT, 0, 0, 180, 0, 0);
 
   //set the piston adi port to output
-  adi_pin_mode(LED,OUTPUT);
+  adi_pin_mode(LED, OUTPUT);
+  adi_pin_mode(PISTON, OUTPUT);
 
   // Reset encoder tick positions
   left_encoder.reset();
@@ -429,6 +430,8 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+  bool pistonState = false;
+
   printf("opcontrol");
 
   left_encoder.reset();
@@ -446,10 +449,16 @@ void opcontrol() {
 
     //odometry.updatePosition(mathy_angle_wrap(mathy_to_radians(inertial.get_heading())));
 
+    adi_digital_write(PISTON, pistonState);
+
     if(controller_get_digital(MASTER_CONTROLLER, DIGITAL_B) == 1) {
       motor_move(PUNCHER, 127);
     } else {
       motor_brake(PUNCHER);
+    }
+
+    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_LEFT)) {
+      pistonState = !pistonState;
     }
 
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_DOWN) == 1) {
