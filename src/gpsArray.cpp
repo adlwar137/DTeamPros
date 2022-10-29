@@ -11,22 +11,22 @@ void GpsArray::addGps(pros::Gps* sensor) {
 //just average gps values to get a pose
 //TODO
 //will come up with smarter solution later
-vector3d_t GpsArray::get_pose() {
-    vector3d_t poseSum;
+Vector GpsArray::get_pose() {
+    Vector poseSum;
     //sum all the sensors values
     for(int i = 0; i < this->gpsSensors.size(); i++) {
         poseSum.x += this->gpsSensors.at(i)->get_status().x;
         poseSum.y += this->gpsSensors.at(i)->get_status().y;
-        poseSum.w += this->gpsSensors.at(i)->get_rotation();
+        poseSum.heading += this->gpsSensors.at(i)->get_rotation();
     }
     //divide by size to average them
     poseSum.x /= this->gpsSensors.size();
     poseSum.y /= this->gpsSensors.size();
-    poseSum.w /= this->gpsSensors.size();
+    poseSum.heading /= this->gpsSensors.size();
     //convert to radians
-    poseSum.w = mathy_to_radians(poseSum.w);
+    poseSum.heading = mathy_to_radians<double>(poseSum.heading);
     //wrap angle
-    poseSum.w = mathy_angle_wrap(poseSum.w);
+    poseSum.heading = mathy_angle_wrap(poseSum.heading);
 
     return poseSum;
 }
