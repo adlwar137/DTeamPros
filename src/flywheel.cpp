@@ -1,33 +1,48 @@
 #include "flywheel.h"
 
-using namespace pros::c;
-
-int32_t flywheel_spin(flywheel Flywheel, const int8_t speed) {
-    motor_move(Flywheel.motorA, speed);
-    motor_move(Flywheel.motorB, speed);
-    return 1;
+Flywheel::Flywheel(pros::Motor* leftMotor, pros::Motor* rightMotor) {
+    this->leftMotor = leftMotor;
+    this->rightMotor = rightMotor;
 }
 
-int32_t flywheel_set_brake_mode(flywheel Flywheel, const pros::motor_brake_mode_e_t brakemode) {
-    motor_set_brake_mode(Flywheel.motorA, brakemode);
-    motor_set_brake_mode(Flywheel.motorB, brakemode);
-    return 1;
+Flywheel::Flywheel(pros::Motor* leftMotor, pros::Motor* rightMotor, pros::motor_gearset_e_t gearset) {
+    this->leftMotor = leftMotor;
+    this->rightMotor = rightMotor;
+    Flywheel::set_gearing(gearset);
 }
 
-int32_t flywheel_brake(flywheel Flywheel) {
-    motor_brake(Flywheel.motorA);
-    motor_brake(Flywheel.motorB);
-    return 1;
+int32_t Flywheel::set_gearing(pros::motor_gearset_e_t gearset) {
+    this->leftMotor->set_gearing(gearset);
+    this->rightMotor->set_gearing(gearset);
+    this->gearset = gearset;
+    return 0;
 }
 
-int32_t flywheel_set_gearing(flywheel Flywheel, const pros::motor_gearset_e_t gearset) {
-    motor_set_gearing(Flywheel.motorA, gearset);
-    motor_set_gearing(Flywheel.motorB, gearset);
-    return 1;
+int32_t Flywheel::set_brake_mode(pros::motor_brake_mode_e_t brakemode) {
+    this->leftMotor->set_brake_mode(brakemode);
+    this->rightMotor->set_brake_mode(brakemode);
+    return 0;
 }
 
-int32_t flywheel_set_reversed(flywheel Flywheel, const bool reversed) {
-    motor_set_reversed(Flywheel.motorA, reversed);
-    motor_set_reversed(Flywheel.motorB, reversed);
-    return 1;
+double Flywheel::get_actual_average_velocity() {
+    double average = (this->leftMotor->get_actual_velocity() + this->rightMotor->get_actual_velocity()) / 2;
+    return average;
+}
+
+int32_t Flywheel::spin(int32_t voltage) {
+    this->leftMotor->move(voltage);
+    this->rightMotor->move(voltage);
+    return 0;
+}
+
+int32_t Flywheel::spin_velocity(int32_t velocity) {
+    this->leftMotor->move_velocity(velocity);
+    this->rightMotor->move_velocity(velocity);
+    return 0;
+}
+
+int32_t Flywheel::brake() {
+    this->leftMotor->brake();
+    this->rightMotor->brake();
+    return 0;
 }
