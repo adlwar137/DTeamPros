@@ -3,25 +3,24 @@
 Flywheel::Flywheel(pros::Motor* leftMotor, pros::Motor* rightMotor) {
     this->leftMotor = leftMotor;
     this->rightMotor = rightMotor;
+    this->left_flywheel_pid = new PIDController(FLYWHEEL_KP, FLYWHEEL_KI, FLYWHEEL_KD, 12000 / FLYWHEEL_KI);
+    this->right_flywheel_pid = new PIDController(FLYWHEEL_KP, FLYWHEEL_KI, FLYWHEEL_KD, 12000 / FLYWHEEL_KI);
+    this->mode = flywheelMode::Driver;
 }
 
-Flywheel::Flywheel(pros::Motor* leftMotor, pros::Motor* rightMotor, pros::motor_gearset_e_t gearset) {
-    this->leftMotor = leftMotor;
-    this->rightMotor = rightMotor;
+Flywheel::Flywheel(pros::Motor* leftMotor, pros::Motor* rightMotor, pros::motor_gearset_e_t gearset) : Flywheel(leftMotor, rightMotor) {
     Flywheel::set_gearing(gearset);
 }
 
-int32_t Flywheel::set_gearing(pros::motor_gearset_e_t gearset) {
+void Flywheel::set_gearing(pros::motor_gearset_e_t gearset) {
     this->leftMotor->set_gearing(gearset);
     this->rightMotor->set_gearing(gearset);
     this->gearset = gearset;
-    return 0;
 }
 
-int32_t Flywheel::set_brake_mode(pros::motor_brake_mode_e_t brakemode) {
+void Flywheel::set_brake_mode(pros::motor_brake_mode_e_t brakemode) {
     this->leftMotor->set_brake_mode(brakemode);
     this->rightMotor->set_brake_mode(brakemode);
-    return 0;
 }
 
 double Flywheel::get_actual_average_velocity() {
@@ -29,20 +28,28 @@ double Flywheel::get_actual_average_velocity() {
     return average;
 }
 
-int32_t Flywheel::spin(int32_t voltage) {
+void Flywheel::spin(int32_t voltage) {
     this->leftMotor->move(voltage);
     this->rightMotor->move(voltage);
-    return 0;
 }
 
-int32_t Flywheel::spin_velocity(int32_t velocity) {
-    this->leftMotor->move_velocity(velocity);
-    this->rightMotor->move_velocity(velocity);
-    return 0;
+void Flywheel::spin_velocity(double velocity) {
+    this->desired_velocity = velocity;
 }
 
-int32_t Flywheel::brake() {
+void Flywheel::update() {
+    if(this->mode == flywheelMode::Auton) {
+            double left_voltage = this->left_flywheel_pid->calculate(desired_velocity - this->leftMotor->get_actual_velocity());
+            double right_voltage = this->right_flywheel_pid->calculate(desired_velocity - this->rightMotor->get_actual_velocity());
+
+            this->leftMotor->move_voltage(left_voltage);
+            this->rightMotor->move_voltage(right_voltage);
+    } else {
+        //bro what?
+    }
+}
+
+void Flywheel::brake() {
     this->leftMotor->brake();
     this->rightMotor->brake();
-    return 0;
 }

@@ -1,6 +1,10 @@
 #pragma once
 #include "main.h"
+#include "PIDController.h"
+#include "constants.h"
+#include "mathy.h"
 
+enum flywheelMode{Auton, Driver};
 class Flywheel {
   public:
     Flywheel(pros::Motor* leftMotor,
@@ -10,18 +14,25 @@ class Flywheel {
              pros::Motor* rightMotor,
              pros::motor_gearset_e_t gearset);
 
-    int32_t set_gearing(pros::motor_gearset_e_t gearing);
+    void set_gearing(pros::motor_gearset_e_t gearing);
 
-    int32_t set_brake_mode(pros::motor_brake_mode_e_t brakemode);
+    void set_brake_mode(pros::motor_brake_mode_e_t brakemode);
 
     double get_actual_average_velocity();
 
-    int32_t spin(int32_t voltage);
+    void spin(int32_t voltage);
+    
+    void spin_velocity(double velocity);
 
-    int32_t spin_velocity(int32_t velocity);
+    void update();
 
-    int32_t brake();
+    void brake();
   private:
+    
+    double desired_velocity;
+    flywheelMode mode;
+    PIDController* left_flywheel_pid;
+    PIDController* right_flywheel_pid;
     pros::Motor* leftMotor;
     pros::Motor* rightMotor;
     pros::motor_gearset_e_t gearset;

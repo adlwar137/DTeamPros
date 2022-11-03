@@ -19,6 +19,13 @@ static bool within(double x, double y, double tolerance) {
   return fabs(y - x) < tolerance;
 }
 
+void flywheel_run(void* param) {
+  while(1) {
+    flywheel.update();
+    pros::delay(20);
+  }
+}
+
 void odometry_run(void* param) {
   while(1) {
     odometry.updatePosition(mathy_angle_wrap(mathy_to_radians<double>(inertial.get_heading())));
@@ -72,6 +79,8 @@ void initialize() {
   //create the odometry task to run in the background
   //That sweet sweet absolute position
   pros::Task odometry_task = pros::Task(odometry_run, NULL, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sir William Rowan Hamilton");
+
+  pros::Task fly_wheel_pid = pros::Task(flywheel_run, NULL, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "flywheel burr");
 }
 
 /**
@@ -109,11 +118,13 @@ void competition_initialize() {
  */
 void autonomous() {
 // long one roller start
+
   base.move_velocity(0, 200, 0);
   motor_move(INTAKE, -127);
   delay(500);
   motor_brake(INTAKE);
   base.brake();
+
 // long one roller end
 
 /*
@@ -265,15 +276,17 @@ void autonomous() {
   //two roller end
 */
 
-/*
+
   //skills start
+/*
   base.set_brake_mode(MOTOR_BRAKE_BRAKE);
 
-  base.move_velocity(0, 25, 0);
-  motor_move(INTAKE, -127);
-  pros::delay(1000);
-  motor_brake(INTAKE);
+  base.move_velocity(0, 200, 0);
+  pros::delay(500);
   base.brake();
+  motor_move(INTAKE, -127);
+  pros::delay(1500);
+  motor_brake(INTAKE);
 
   double TranslationalVelocity, WVelocity;
   double XDesired = 12, YDesired = -24, WDesired = M_PI/2;
@@ -310,11 +323,12 @@ void autonomous() {
 
   pros::delay(500);
 
-  base.move_velocity(0, 25, 0);
-  motor_move(INTAKE, -127);
-  pros::delay(2500);
-  motor_brake(INTAKE);
+  base.move_velocity(0, 200, 0);
+  pros::delay(500);
   base.brake();
+  motor_move(INTAKE, -127);
+  pros::delay(1500);
+  motor_brake(INTAKE);
 
   XDesired = -4*24;
   YDesired = -3.8*24;
@@ -366,10 +380,11 @@ void autonomous() {
   base.brake();
 
   base.move_velocity(0, 25, 0);
-  motor_move(INTAKE, -127);
   pros::delay(3000);
-  motor_brake(INTAKE);
   base.brake();
+  motor_move(INTAKE, -127);
+  pros::delay(1200);
+  motor_brake(INTAKE);
 
   WDesired = 0;
 
@@ -384,8 +399,8 @@ void autonomous() {
 
   base.brake();
 
-  XDesired = -3.5*24;
-  YDesired = -3.5*24;
+  XDesired = -3.25*24;
+  YDesired = -3.25*24;
 
   while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
     Vector difference = Vector();
@@ -418,13 +433,15 @@ void autonomous() {
 
   base.brake();
 
-  base.move_velocity(0, 25, 0);
-  motor_move(INTAKE, -127);
+  base.move_velocity(0, 50, 0);
   pros::delay(3000);
-  motor_brake(INTAKE);
   base.brake();
+  motor_move(INTAKE, -127);
+  pros::delay(1500);
+  motor_brake(INTAKE);
   //skills end
-*/
+  */
+
 
 }
 
@@ -455,11 +472,7 @@ void opcontrol() {
   PIDController WPID = PIDController(64, 0, 0);
 
   while (1) {
-    //printf("GPS heading %f \n", (gps_get_heading(GPS_LEFT) + (gps_get_heading(GPS_RIGHT) - 180)) / 2);
-
-    //printf("GPS xPosition: %f, GPS yPosition: %f, GPS heading: %f\n", locationSensor_get_pose().x, locationSensor_get_pose().y, locationSensor_get_pose().w);
-
-    //odometry.updatePosition(mathy_angle_wrap(mathy_to_radians(inertial.get_heading())));
+    rollerSensor.get_by_code(0, pros::vision_color_code_t )
 
     adi_digital_write(PISTON, pistonState);
 
@@ -507,6 +520,8 @@ void opcontrol() {
     int desired_controller_y = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y);
     int desired_controller_w = controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X);
 
+    //flywheel.spin_velocity(((double)controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_Y) / 127) * 600);
+    //printf("controller: %f\n",((double)controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_Y) / 127) * 200);
     double field_based_controller_x = desired_controller_x * cos(odometry.getHeading()) - desired_controller_y * sin(odometry.getHeading());
     double field_based_controller_y = desired_controller_x * sin(odometry.getHeading()) + desired_controller_y * cos(odometry.getHeading());
 
@@ -556,7 +571,7 @@ void opcontrol() {
       mathy_remap(desired_controller_w, -127, 127, -200, 200));
 */
 
-    printf("x: %f, Y: %f, W: %f\n", odometry.getStatus().x, odometry.getStatus().y, odometry.getStatus().heading);
+    //printf("x: %f, Y: %f, W: %f\n", odometry.getStatus().x, odometry.getStatus().y, odometry.getStatus().heading);
     //printf("left: %d, right: %d, strafe: %d\n", adi_encoder_get(left_encoder), adi_encoder_get(right_encoder), adi_encoder_get(strafe_encoder));
 
     delay(20);
