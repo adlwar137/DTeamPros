@@ -67,10 +67,6 @@ void initialize() {
   gps_initialize_full(GPS_LEFT, 0, 0, 0, 0, 0);
   gps_initialize_full(GPS_RIGHT, 0, 0, 180, 0, 0);
 
-  //set the piston adi port to output
-  adi_pin_mode(LED, OUTPUT);
-  adi_pin_mode(PISTON, OUTPUT);
-
   // Reset encoder tick positions
   left_encoder.reset();
   right_encoder.reset();
@@ -117,13 +113,56 @@ void competition_initialize() {
  * from where it left off.
  */
 void autonomous() {
+
+
+
 // long one roller start
+
+  double WDesired = -M_PI/72;
+  double WVelocity;
+  PIDController WPID = PIDController(1, 0, 0);
 
   base.move_velocity(0, 200, 0);
   motor_move(INTAKE, -127);
   delay(500);
   motor_brake(INTAKE);
   base.brake();
+
+  delay(1000);
+
+  while(!(within(odometry.getHeading(), WDesired, 0.05))) {
+
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
+  }
+
+  base.brake();
+
+  flywheel.set_flywheel_mode(flywheelMode::Auton);
+
+  flywheel.spin_velocity(410);
+
+  delay(3000);
+
+  motor_move(PUNCHER, 127);
+
+  delay(500);
+
+  motor_brake(PUNCHER);
+
+  delay(3000);
+
+  motor_move(PUNCHER, 127);
+
+  delay(500);
+
+  flywheel.spin_velocity(0);
+
+  motor_brake(PUNCHER);
+
 
 // long one roller end
 
@@ -284,16 +323,53 @@ void autonomous() {
   base.move_velocity(0, 200, 0);
   pros::delay(500);
   base.brake();
-  motor_move(INTAKE, -127);
-  pros::delay(1500);
+  motor_move_relative(INTAKE, 1350, -255);
   motor_brake(INTAKE);
 
-  double TranslationalVelocity, WVelocity;
-  double XDesired = 12, YDesired = -24, WDesired = M_PI/2;
-  double TranslationalError, WError;
+  double WDesired = -M_PI/72;
+  double WVelocity;
+  PIDController WPID = PIDController(1, 0, 0);
+
+  delay(1000);
+
+  while(!(within(odometry.getHeading(), WDesired, 0.05))) {
+
+    WVelocity = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+
+    base.move_vector(0, 0, WVelocity, false);
+
+    pros::delay(20);
+  }
+
+  base.brake();
+
+  flywheel.set_flywheel_mode(flywheelMode::Auton);
+
+  flywheel.spin_velocity(410);
+
+  delay(3000);
+
+  motor_move(PUNCHER, 127);
+
+  delay(500);
+
+  motor_brake(PUNCHER);
+
+  delay(3000);
+
+  motor_move(PUNCHER, 127);
+
+  delay(500);
+
+  flywheel.spin_velocity(0);
+
+  motor_brake(PUNCHER);
+
+  double XDesired = 12, YDesired = -24;
+  WDesired = M_PI/2;
 
   PIDController TranslationPID = PIDController(0.04, 0, 0);
-  PIDController WPID = PIDController(1, 0, 0);
+  WPID = PIDController(1, 0, 0);
 
   while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
     Vector difference = Vector();
@@ -326,8 +402,7 @@ void autonomous() {
   base.move_velocity(0, 200, 0);
   pros::delay(500);
   base.brake();
-  motor_move(INTAKE, -127);
-  pros::delay(1500);
+  motor_move_relative(INTAKE, 1350, -255);
   motor_brake(INTAKE);
 
   XDesired = -4*24;
@@ -382,8 +457,7 @@ void autonomous() {
   base.move_velocity(0, 25, 0);
   pros::delay(3000);
   base.brake();
-  motor_move(INTAKE, -127);
-  pros::delay(1200);
+  motor_move_relative(INTAKE, 1350, -255);
   motor_brake(INTAKE);
 
   WDesired = 0;
@@ -436,13 +510,30 @@ void autonomous() {
   base.move_velocity(0, 50, 0);
   pros::delay(3000);
   base.brake();
-  motor_move(INTAKE, -127);
-  pros::delay(1500);
+  motor_move_relative(INTAKE, 1350, -255);
   motor_brake(INTAKE);
+
+  piston.set_value(true);
+
+  XDesired = 3.25*24;
+  YDesired = 3.25*24;
+
+  while(!(within(odometry.getPosition().y, YDesired, 0.5) && within(odometry.getPosition().x, XDesired, 0.5))) {
+    Vector difference = Vector();
+    difference.x = XDesired - odometry.getPosition().x;
+    difference.y = YDesired - odometry.getPosition().y;
+    //rotate the vector by heading to make turn resistant
+    //disable if breaks
+    //difference.rotate(odometry.getHeading());
+
+    double TranslationalPower = TranslationPID.calculate(difference.magnitude());
+    //double RotationalPower = WPID.calculate(mathy_angle_wrap(WDesired - odometry.getHeading()));
+    printf("angle: %f, power: %f\n", difference.angle(), TranslationalPower);
+    base.move_vector(difference.angle() + odometry.getHeading(), TranslationalPower, 0, false);
+    pros::delay(20);
+  }
   //skills end
-  */
-
-
+*/
 }
 
 /**
@@ -459,9 +550,11 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-  bool pistonState = false;
+  bool pistonState = true;
 
   printf("opcontrol");
+
+  int opcontrol_time = pros::millis();
 
   left_encoder.reset();
   right_encoder.reset();
@@ -470,11 +563,54 @@ void opcontrol() {
   odometry.reset();
 
   PIDController WPID = PIDController(64, 0, 0);
+  PIDController rollercontroller = PIDController(0.01, 0, 0);
+
+  bool intakeLimitState = false;
+  bool lastIntakeLimitState = false;
+
+  flywheel.set_flywheel_mode(flywheelMode::Driver);
+
 
   while (1) {
-    rollerSensor.get_by_code(0, pros::vision_color_code_t )
 
-    adi_digital_write(PISTON, pistonState);
+    printf("range: %d\n", rangeFinder.get_value());
+    if(rangeFinder.get_value() < 100) {
+      rollerLED.set_value(0);
+    } else {
+      rollerLED.set_value(1);
+    }
+
+
+/*
+      int area = rollerSensor.get_by_sig(0, 1).width * rollerSensor.get_by_sig(0, 1).height;
+      
+      //rollerSensor.get_by_sig(0, 1);
+
+      int desired = 30000;
+      int error = desired - area;
+      
+      printf("area: %f, error: %d\n", area, error);
+
+      motor_move(INTAKE, -rollercontroller.calculate(error));
+*/
+
+      if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_R1)) {
+        motor_move(INTAKE, 127);
+      }
+      if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_R2)) {
+        motor_move(INTAKE, 0);
+      }
+      if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_A)) {
+        motor_move(INTAKE, -127);
+      }
+  
+    if(intakeLimitState == false && lastIntakeLimitState == true) {
+      motor_brake(INTAKE);
+    }
+    
+    lastIntakeLimitState = intakeLimitState;
+    
+    piston.set_value(pistonState);
 
     if(controller_get_digital(MASTER_CONTROLLER, DIGITAL_B) == 1) {
       motor_move(PUNCHER, 127);
@@ -482,9 +618,12 @@ void opcontrol() {
       motor_brake(PUNCHER);
     }
 
-    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_LEFT)) {
-      pistonState = !pistonState;
+    if((pros::millis() - opcontrol_time) > 95000) {
+        if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_LEFT)) {
+          pistonState = !pistonState;
+        }
     }
+
 
     if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_DOWN) == 1) {
       isForward = !isForward;
@@ -498,24 +637,6 @@ void opcontrol() {
     }
 
     //printf("flywheelASpeed: %f, flywheelATemp: %f, flywheelBSpeed: %f, flywheelBTemp: %f\n", motor_get_actual_velocity(FLYWHEELA), motor_get_temperature(FLYWHEELA), motor_get_actual_velocity(FLYWHEELB), motor_get_temperature(FLYWHEELB));
-
-    if(flywheel.get_actual_average_velocity() > 450 ) {
-      adi_digital_write(LED, false);
-      controller_rumble(MASTER_CONTROLLER, "-");
-    } else {
-      adi_digital_write(LED, true);
-    }
-
-    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_R1)) {
-      motor_move(INTAKE, 127);
-    }
-    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_R2)) {
-      motor_move(INTAKE, 0);
-    }
-    if(controller_get_digital_new_press(MASTER_CONTROLLER, DIGITAL_A)) {
-      motor_move(INTAKE, -127);
-    }
-
     int desired_controller_x = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_X);
     int desired_controller_y = controller_get_analog(MASTER_CONTROLLER, ANALOG_LEFT_Y);
     int desired_controller_w = controller_get_analog(MASTER_CONTROLLER, ANALOG_RIGHT_X);
