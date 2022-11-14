@@ -18,6 +18,17 @@ extern pros::ADIEncoder strafe_encoder;
 
 extern pros::Imu inertial;
 
+extern pros::Vision rollerSensor;
+
+extern pros::vision_signature RED_;
+
+extern pros::ADIDigitalOut piston;
+extern pros::ADIDigitalOut rollerLED;
+
+extern pros::ADIUltrasonic rangeFinder;
+
+extern pros::ADIButton intakeLimit;
+
 extern Chassis base;
 extern Flywheel flywheel;
 extern OdometrySensor odometry;
