@@ -23,6 +23,10 @@ void Flywheel::set_brake_mode(pros::motor_brake_mode_e_t brakemode) {
     this->rightMotor->set_brake_mode(brakemode);
 }
 
+void Flywheel::set_flywheel_mode(flywheelMode mode) {
+    this->mode = mode;
+}
+
 double Flywheel::get_actual_average_velocity() {
     double average = (this->leftMotor->get_actual_velocity() + this->rightMotor->get_actual_velocity()) / 2;
     return average;

@@ -18,6 +18,8 @@ class Flywheel {
 
     void set_brake_mode(pros::motor_brake_mode_e_t brakemode);
 
+    void set_flywheel_mode(flywheelMode mode);
+
     double get_actual_average_velocity();
 
     void spin(int32_t voltage);
