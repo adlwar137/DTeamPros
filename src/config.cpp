@@ -9,6 +9,9 @@ pros::Motor backRight = pros::Motor(2, true);
 pros::Motor flywheelLeft = pros::Motor(5, true);
 pros::Motor flywheelRight = pros::Motor(7, false);
 
+pros::Rotation flywheelRotationLeft = pros::Rotation(18);
+pros::Rotation flywheelRotationRight = pros::Rotation(14);
+
 pros::ADIEncoder left_encoder = pros::ADIEncoder(3, 4, false);
 pros::ADIEncoder right_encoder = pros::ADIEncoder(1, 2, false);
 pros::ADIEncoder strafe_encoder = pros::ADIEncoder(5, 6, false);
@@ -26,6 +29,6 @@ pros::ADIUltrasonic rangeFinder = pros::ADIUltrasonic({17, 1, 2});
 
 Chassis base = Chassis(&frontLeft, &frontRight, &backLeft, &backRight, pros::E_MOTOR_GEARSET_18);
 
-Flywheel flywheel = Flywheel(&flywheelLeft, &flywheelRight, pros::motor_gearset_e_t::E_MOTOR_GEARSET_06);
+Flywheel flywheel = Flywheel(&flywheelLeft, &flywheelRight, &flywheelRotationLeft, &flywheelRotationRight, pros::motor_gearset_e_t::E_MOTOR_GEARSET_06);
 
 OdometrySensor odometry = OdometrySensor(&left_encoder, &right_encoder, &strafe_encoder);

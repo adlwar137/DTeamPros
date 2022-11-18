@@ -22,7 +22,7 @@ static bool within(double x, double y, double tolerance) {
 void flywheel_run(void* param) {
   while(1) {
     flywheel.update();
-    pros::delay(20);
+    pros::delay(40);
   }
 }
 
@@ -114,10 +114,31 @@ void competition_initialize() {
  */
 void autonomous() {
 
+// testing start
+PIDController WPID = PIDController(0.02, 0, 0);
+double WDesired = mathy_to_radians<double>(-45);
+printf("Desired: %f, Current: %f\n", WDesired, odometry.getHeading());
 
+while(1) {
+  double error = mathy_to_degrees(WDesired - odometry.getHeading());
+  double velocity = WPID.calculate(error);
+  printf("error: %f, pid: %f\n", error, velocity);
+
+  base.move_vector(0, 0, -velocity, false);
+  
+
+  delay(20);
+}
+
+base.brake();
+
+
+//testing();
+
+//long_roller_testing();
 
 // long one roller start
-
+/*
   double WDesired = -M_PI/72;
   double WVelocity;
   PIDController WPID = PIDController(1, 0, 0);
@@ -141,9 +162,9 @@ void autonomous() {
 
   base.brake();
 
-  flywheel.set_flywheel_mode(flywheelMode::Auton);
+  flywheel.set_mode(flywheelMode::Auton);
 
-  flywheel.spin_velocity(410);
+  flywheel.spin_velocity(2050);
 
   delay(3000);
 
@@ -159,10 +180,10 @@ void autonomous() {
 
   delay(500);
 
-  flywheel.spin_velocity(0);
+  // flywheel.spin_velocity(0);
 
   motor_brake(PUNCHER);
-
+*/
 
 // long one roller end
 
@@ -562,23 +583,26 @@ void opcontrol() {
 
   odometry.reset();
 
-  PIDController WPID = PIDController(64, 0, 0);
-  PIDController rollercontroller = PIDController(0.01, 0, 0);
-
   bool intakeLimitState = false;
   bool lastIntakeLimitState = false;
 
-  flywheel.set_flywheel_mode(flywheelMode::Driver);
-
+  flywheel.set_mode(flywheelMode::Driver);
 
   while (1) {
 
-    printf("range: %d\n", rangeFinder.get_value());
+    printf("heading %f\n", odometry.getHeading());
+
+    //printf("range: %d\n", rangeFinder.get_value());
     if(rangeFinder.get_value() < 100) {
       rollerLED.set_value(0);
     } else {
       rollerLED.set_value(1);
     }
+/*
+    printf("leftFlywheelEncoder: %f, ", (double)-flywheelRotationLeft.get_velocity()*60/360);
+    printf("rightFlywheelEncoder: %f\n", (double)flywheelRotationRight.get_velocity()*60/360);
+*/
+
 
 
 /*

@@ -1,5 +1,9 @@
 #include "mathy.h"
 
+bool mathy_within(double x, double y, double tolerance) {
+  return fabs(y - x) < tolerance;
+}
+
 double Vector::magnitude() {
   return hypot(this->x, this->y);
 }

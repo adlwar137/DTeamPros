@@ -8,17 +8,21 @@ enum flywheelMode{Auton, Driver};
 class Flywheel {
   public:
     Flywheel(pros::Motor* leftMotor,
-             pros::Motor* rightMotor);
+             pros::Motor* rightMotor,
+             pros::Rotation* leftRotation,
+             pros::Rotation* rightRotation);
     
     Flywheel(pros::Motor* leftMotor,
              pros::Motor* rightMotor,
+             pros::Rotation* leftRotation,
+             pros::Rotation* rightRotation,
              pros::motor_gearset_e_t gearset);
 
     void set_gearing(pros::motor_gearset_e_t gearing);
 
     void set_brake_mode(pros::motor_brake_mode_e_t brakemode);
 
-    void set_flywheel_mode(flywheelMode mode);
+    void set_mode(flywheelMode mode);
 
     double get_actual_average_velocity();
 
@@ -37,5 +41,7 @@ class Flywheel {
     PIDController* right_flywheel_pid;
     pros::Motor* leftMotor;
     pros::Motor* rightMotor;
+    pros::Rotation* leftRotation;
+    pros::Rotation* rightRotation;
     pros::motor_gearset_e_t gearset;
 };

@@ -1,6 +1,8 @@
 #pragma once
 #include "main.h"
 
+bool mathy_within(double x, double y, double tolerance);
+
 class Vector {
     public:
         double x;

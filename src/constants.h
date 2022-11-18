@@ -7,8 +7,8 @@
 #define STRAFE_TRACKING_WHEEL_DISTANCE_FROM_CENTER 4.75
 #define POWERED_WHEEL_DISTANCE_FROM_CENTER 8.25
 
-const double FLYWHEEL_KP = 0.5;
-const double FLYWHEEL_KI = 0.5;
+const double FLYWHEEL_KP = 0;
+const double FLYWHEEL_KI = 0.05;
 const double FLYWHEEL_KD = 0;
 
 const int32_t MOTOR_MAX_VOLTAGE = 127;

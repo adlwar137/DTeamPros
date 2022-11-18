@@ -12,6 +12,9 @@ extern pros::Motor backRight;
 extern pros::Motor flywheelLeft;
 extern pros::Motor flywheelRight;
 
+extern pros::Rotation flywheelRotationLeft;
+extern pros::Rotation flywheelRotationRight;
+
 extern pros::ADIEncoder right_encoder;
 extern pros::ADIEncoder left_encoder;
 extern pros::ADIEncoder strafe_encoder;
