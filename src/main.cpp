@@ -56,7 +56,7 @@ void initialize() {
   motor_set_brake_mode(PUNCHER, MOTOR_BRAKE_BRAKE);
   
   // Set specific motor directions
-  motor_set_reversed(INTAKE, false);
+  motor_set_reversed(INTAKE, true);
   motor_set_reversed(PUNCHER, true);
 
   // Set brake modes
@@ -674,9 +674,9 @@ void opcontrol() {
     //base.move_vector(atan2(field_based_controller_y, field_based_controller_x), hypot(field_based_controller_x, field_based_controller_y) / (double)127, desired_controller_w/(double)127, false);
 
     if(isForward) {
-      base.move_vector(atan2(desired_controller_y, desired_controller_x), hypot(desired_controller_x, desired_controller_y) / (double)127, desired_controller_w/(double)127, false);
+      base.move_vector(atan2(desired_controller_y, desired_controller_x), hypot(desired_controller_x, desired_controller_y) / (double)127, -desired_controller_w/(double)127, true);
     } else {
-      base.move_vector(atan2(desired_controller_y, desired_controller_x), hypot(desired_controller_x, desired_controller_y) / (double)127, desired_controller_w/(double)127/2, true);
+      base.move_vector(atan2(desired_controller_y, desired_controller_x), hypot(desired_controller_x, desired_controller_y) / (double)127, -desired_controller_w/(double)127/2, false);
     }
 
 /*
